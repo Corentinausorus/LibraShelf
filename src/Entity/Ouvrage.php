@@ -21,17 +21,8 @@ class Ouvrage
     #[ORM\Column(length: 255)]
     private ?string $titre = null;
 
-    #[ORM\Column(length: 255)]
-    private ?string $Editeur = null;
-
     #[ORM\Column]
     private ?int $ISBN = null;
-
-    #[ORM\Column(type: Types::ARRAY, nullable: true)]
-    private ?array $Categories = null;
-
-    #[ORM\Column(type: Types::ARRAY, nullable: true)]
-    private ?array $tags = null;
 
     #[ORM\Column(type: Types::ARRAY, nullable: true)]
     private ?array $Langues = null;
@@ -48,9 +39,33 @@ class Ouvrage
     #[ORM\ManyToMany(targetEntity: Auteur::class, mappedBy: 'Livre')]
     private Collection $auteurs;
 
+    /**
+     * @var Collection<int, Exemplaires>
+     */
+    #[ORM\OneToMany(targetEntity: Exemplaires::class, mappedBy: 'ouvrage')]
+    private Collection $Exemplaire;
+
+    #[ORM\ManyToOne(inversedBy: 'ouvrage')]
+    private ?Editeur $editeur = null;
+
+    /**
+     * @var Collection<int, Categorie>
+     */
+    #[ORM\ManyToMany(targetEntity: Categorie::class, mappedBy: 'ouvrage')]
+    private Collection $categories;
+
+    /**
+     * @var Collection<int, Tags>
+     */
+    #[ORM\ManyToMany(targetEntity: Tags::class, mappedBy: 'ouvrage')]
+    private Collection $tags;
+
     public function __construct()
     {
-        $this->auteurs = new ArrayCollection();    }
+        $this->auteurs = new ArrayCollection();
+        $this->Exemplaire = new ArrayCollection();
+        $this->categories = new ArrayCollection();
+        $this->tags = new ArrayCollection();    }
 
     public function getId(): ?int
     {
@@ -69,45 +84,9 @@ class Ouvrage
         return $this;
     }
 
-    public function getEditeur(): ?string
-    {
-        return $this->Editeur;
-    }
-
-    public function setEditeur(string $Editeur): static
-    {
-        $this->Editeur = $Editeur;
-
-        return $this;
-    }
-
     public function setId(int $Id): static
     {
         $this->Id = $Id;
-
-        return $this;
-    }
-
-    public function getCategories(): ?array
-    {
-        return $this->Categories;
-    }
-
-    public function setCategories(?array $Categories): static
-    {
-        $this->Categories = $Categories;
-
-        return $this;
-    }
-
-    public function getTags(): ?array
-    {
-        return $this->tags;
-    }
-
-    public function setTags(?array $tags): static
-    {
-        $this->tags = $tags;
 
         return $this;
     }
@@ -193,5 +172,81 @@ class Ouvrage
     /**
      * @return Collection<int, self>
      */
+
+    /**
+     * @return Collection<int, Exemplaires>
+     */
+    public function getExemplaire(): Collection
+    {
+        return $this->Exemplaire;
+    }
+
+    public function addExemplaire(Exemplaires $exemplaire): static
+    {
+        if (!$this->Exemplaire->contains($exemplaire)) {
+            $this->Exemplaire->add($exemplaire);
+            $exemplaire->setOuvrage($this);
+        }
+
+        return $this;
+    }
+
+    public function removeExemplaire(Exemplaires $exemplaire): static
+    {
+        if ($this->Exemplaire->removeElement($exemplaire)) {
+            // set the owning side to null (unless already changed)
+            if ($exemplaire->getOuvrage() === $this) {
+                $exemplaire->setOuvrage(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function addCategory(Categorie $category): static
+    {
+        if (!$this->categories->contains($category)) {
+            $this->categories->add($category);
+            $category->addOuvrage($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCategory(Categorie $category): static
+    {
+        if ($this->categories->removeElement($category)) {
+            $category->removeOuvrage($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Tags>
+     */
+    public function getTags(): Collection
+    {
+        return $this->tags;
+    }
+
+    public function addTag(Tags $tag): static
+    {
+        if (!$this->tags->contains($tag)) {
+            $this->tags->add($tag);
+            $tag->addOuvrage($this);
+        }
+
+        return $this;
+    }
+
+    public function removeTag(Tags $tag): static
+    {
+        if ($this->tags->removeElement($tag)) {
+            $tag->removeOuvrage($this);
+        }
+
+        return $this;
+    }
     
 }

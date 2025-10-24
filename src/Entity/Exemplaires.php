@@ -24,15 +24,14 @@ class Exemplaires
     #[ORM\Column]
     private ?bool $disponible = null;
 
-    /**
-     * @var Collection<int, Reservation>
-     */
-    #[ORM\OneToMany(targetEntity: Reservation::class, mappedBy: 'Ouvrage')]
-    private Collection $reservations;
+    #[ORM\ManyToOne(inversedBy: 'Exemplaire')]
+    private ?Reservation $reservation = null;
+
+    #[ORM\ManyToOne(inversedBy: 'Exemplaire')]
+    private ?Ouvrage $ouvrage = null;
 
     public function __construct()
     {
-        $this->reservations = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -76,32 +75,26 @@ class Exemplaires
         return $this;
     }
 
-    /**
-     * @return Collection<int, Reservation>
-     */
-    public function getReservations(): Collection
+    public function getReservation(): ?Reservation
     {
-        return $this->reservations;
+        return $this->reservation;
     }
 
-    public function addReservation(Reservation $reservation): static
+    public function setReservation(?Reservation $reservation): static
     {
-        if (!$this->reservations->contains($reservation)) {
-            $this->reservations->add($reservation);
-            $reservation->setOuvrage($this);
-        }
+        $this->reservation = $reservation;
 
         return $this;
     }
 
-    public function removeReservation(Reservation $reservation): static
+    public function getOuvrage(): ?Ouvrage
     {
-        if ($this->reservations->removeElement($reservation)) {
-            // set the owning side to null (unless already changed)
-            if ($reservation->getOuvrage() === $this) {
-                $reservation->setOuvrage(null);
-            }
-        }
+        return $this->ouvrage;
+    }
+
+    public function setOuvrage(?Ouvrage $ouvrage): static
+    {
+        $this->ouvrage = $ouvrage;
 
         return $this;
     }
