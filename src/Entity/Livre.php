@@ -50,8 +50,7 @@ class Ouvrage
 
     public function __construct()
     {
-        $this->auteurs = new ArrayCollection();
-    }
+        $this->auteurs = new ArrayCollection();    }
 
     public function getId(): ?int
     {
@@ -178,4 +177,21 @@ class Ouvrage
 
         return $this;
     }
+
+    public function getLivre(): ?self
+    {
+        return $this->Livre;
+    }
+
+    public function setLivre(?self $Livre): static
+    {
+        $this->Livre = $Livre;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, self>
+     */
+    
 }

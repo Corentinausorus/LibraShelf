@@ -18,6 +18,9 @@ class Reservation
     #[ORM\Column]
     private ?\DateTime $creationDate = null;
 
+    #[ORM\ManyToOne(inversedBy: 'reservations')]
+    private ?Exemplaires $Ouvrage = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -31,6 +34,18 @@ class Reservation
     public function setCreationDate(\DateTime $creationDate): static
     {
         $this->creationDate = $creationDate;
+
+        return $this;
+    }
+
+    public function getOuvrage(): ?Exemplaires
+    {
+        return $this->Ouvrage;
+    }
+
+    public function setOuvrage(?Exemplaires $Ouvrage): static
+    {
+        $this->Ouvrage = $Ouvrage;
 
         return $this;
     }
