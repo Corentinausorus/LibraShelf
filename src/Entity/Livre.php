@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\LivreRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\UX\Turbo\Attribute\Broadcast;
@@ -18,9 +20,6 @@ class Ouvrage
 
     #[ORM\Column(length: 255)]
     private ?string $titre = null;
-
-    #[ORM\Column(type: Types::ARRAY, nullable: true)]
-    private ?array $Auteurs = null;
 
     #[ORM\Column(length: 255)]
     private ?string $Editeur = null;
@@ -43,6 +42,17 @@ class Ouvrage
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $Resume = null;
 
+    /**
+     * @var Collection<int, Auteur>
+     */
+    #[ORM\ManyToMany(targetEntity: Auteur::class, mappedBy: 'Livre')]
+    private Collection $auteurs;
+
+    public function __construct()
+    {
+        $this->auteurs = new ArrayCollection();
+    }
+
     public function getId(): ?int
     {
         return $this->id;
@@ -56,18 +66,6 @@ class Ouvrage
     public function setTitre(string $titre): static
     {
         $this->titre = $titre;
-
-        return $this;
-    }
-
-    public function getAuteurs(): ?array
-    {
-        return $this->Auteurs;
-    }
-
-    public function setAuteurs(array $Auteurs): static
-    {
-        $this->Auteurs = $Auteurs;
 
         return $this;
     }
@@ -158,6 +156,25 @@ class Ouvrage
     public function setISBN(int $ISBN): static
     {
         $this->ISBN = $ISBN;
+
+        return $this;
+    }
+
+    public function addAuteur(Auteur $auteur): static
+    {
+        if (!$this->auteurs->contains($auteur)) {
+            $this->auteurs->add($auteur);
+            $auteur->addLivre($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAuteur(Auteur $auteur): static
+    {
+        if ($this->auteurs->removeElement($auteur)) {
+            $auteur->removeLivre($this);
+        }
 
         return $this;
     }
