@@ -47,10 +47,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Reservation::class, mappedBy: 'User')]
     private Collection $reservations;
 
+    /**
+     * @var Collection<int, Penalites>
+     */
+    #[ORM\OneToMany(targetEntity: Penalites::class, mappedBy: 'user')]
+    private Collection $penalites;
+
     public function __construct()
     {
         $this->emprunts = new ArrayCollection();
         $this->reservations = new ArrayCollection();
+        $this->penalites = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -188,6 +195,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($reservation->getUser() === $this) {
                 $reservation->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Penalites>
+     */
+    public function getPenalites(): Collection
+    {
+        return $this->penalites;
+    }
+
+    public function addPenalite(Penalites $penalite): static
+    {
+        if (!$this->penalites->contains($penalite)) {
+            $this->penalites->add($penalite);
+            $penalite->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removePenalite(Penalites $penalite): static
+    {
+        if ($this->penalites->removeElement($penalite)) {
+            // set the owning side to null (unless already changed)
+            if ($penalite->getUser() === $this) {
+                $penalite->setUser(null);
             }
         }
 
