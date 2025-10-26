@@ -30,8 +30,15 @@ class Exemplaires
     #[ORM\ManyToOne(inversedBy: 'Exemplaire')]
     private ?Ouvrage $ouvrage = null;
 
+    /**
+     * @var Collection<int, HistoriqueInventaire>
+     */
+    #[ORM\OneToMany(targetEntity: HistoriqueInventaire::class, mappedBy: 'exemplaire')]
+    private Collection $historiqueInventaires;
+
     public function __construct()
     {
+        $this->historiqueInventaires = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -95,6 +102,36 @@ class Exemplaires
     public function setOuvrage(?Ouvrage $ouvrage): static
     {
         $this->ouvrage = $ouvrage;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, HistoriqueInventaire>
+     */
+    public function getHistoriqueInventaires(): Collection
+    {
+        return $this->historiqueInventaires;
+    }
+
+    public function addHistoriqueInventaire(HistoriqueInventaire $historiqueInventaire): static
+    {
+        if (!$this->historiqueInventaires->contains($historiqueInventaire)) {
+            $this->historiqueInventaires->add($historiqueInventaire);
+            $historiqueInventaire->setExemplaire($this);
+        }
+
+        return $this;
+    }
+
+    public function removeHistoriqueInventaire(HistoriqueInventaire $historiqueInventaire): static
+    {
+        if ($this->historiqueInventaires->removeElement($historiqueInventaire)) {
+            // set the owning side to null (unless already changed)
+            if ($historiqueInventaire->getExemplaire() === $this) {
+                $historiqueInventaire->setExemplaire(null);
+            }
+        }
 
         return $this;
     }
