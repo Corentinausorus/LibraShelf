@@ -15,9 +15,6 @@ class Notifications
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
-    private ?string $ID = null;
-
     #[ORM\Column(type: Types::SIMPLE_ARRAY, enumType: NotificationType::class)]
     private array $Type = [];
 
@@ -36,13 +33,6 @@ class Notifications
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function setID(string $ID): static
-    {
-        $this->ID = $ID;
-
-        return $this;
     }
 
     /**
