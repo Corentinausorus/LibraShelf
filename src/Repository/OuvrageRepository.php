@@ -2,39 +2,39 @@
 
 namespace App\Repository;
 
-use App\Entity\Livre;
+use App\Entity\Ouvrage;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<Livre>
+ * @extends ServiceEntityRepository<Ouvrage>
  */
-class LivreRepository extends ServiceEntityRepository
+class OuvrageRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, Livre::class);
+        parent::__construct($registry, Ouvrage::class);
     }
 
 //    /**
-//     * @return Livre[] Returns an array of Livre objects
+//     * @return Ouvrage[] Returns an array of Ouvrage objects
 //     */
 //    public function findByExampleField($value): array
 //    {
-//        return $this->createQueryBuilder('l')
-//            ->andWhere('l.exampleField = :val')
+//        return $this->createQueryBuilder('o')
+//            ->andWhere('o.exampleField = :val')
 //            ->setParameter('val', $value)
-//            ->orderBy('l.id', 'ASC')
+//            ->orderBy('o.id', 'ASC')
 //            ->setMaxResults(10)
 //            ->getQuery()
 //            ->getResult()
 //        ;
 //    }
 
-//    public function findOneBySomeField($value): ?Livre
+//    public function findOneBySomeField($value): ?Ouvrage
 //    {
-//        return $this->createQueryBuilder('l')
-//            ->andWhere('l.exampleField = :val')
+//        return $this->createQueryBuilder('o')
+//            ->andWhere('o.exampleField = :val')
 //            ->setParameter('val', $value)
 //            ->getQuery()
 //            ->getOneOrNullResult()

@@ -4,8 +4,8 @@ namespace App\Enum;
 
 enum PenaliteRaison: string
 {
-    case OVERDUE = 'OVERDUE';
-    case LOST    = 'LOST';
-    case DAMAGE  = 'DAMAGE';
-    case OTHER   = 'OTHER';
+    case RETARD = 'RETARD';
+    case PERDU = 'PERDU';
+    case ABIME = 'ABIME';
+    case AUTRE = 'AUTRE';
 }

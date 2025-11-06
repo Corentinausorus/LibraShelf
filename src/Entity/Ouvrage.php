@@ -2,14 +2,14 @@
 
 namespace App\Entity;
 
-use App\Repository\LivreRepository;
+use App\Repository\OuvrageRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\UX\Turbo\Attribute\Broadcast;
 
-#[ORM\Entity(repositoryClass: LivreRepository::class)]
+#[ORM\Entity(repositoryClass: OuvrageRepository::class)]
 #[Broadcast]
 class Ouvrage
 {
@@ -36,28 +36,28 @@ class Ouvrage
     /**
      * @var Collection<int, Auteur>
      */
-    #[ORM\ManyToMany(targetEntity: Auteur::class, mappedBy: 'Livre')]
+    #[ORM\ManyToMany(targetEntity: Auteur::class, mappedBy: 'Ouvrage')]
     private Collection $auteurs;
 
     /**
      * @var Collection<int, Exemplaires>
      */
-    #[ORM\OneToMany(targetEntity: Exemplaires::class, mappedBy: 'ouvrage')]
+    #[ORM\OneToMany(targetEntity: Exemplaires::class, mappedBy: 'Ouvrage')]
     private Collection $Exemplaire;
 
-    #[ORM\ManyToOne(inversedBy: 'ouvrage')]
+    #[ORM\ManyToOne(inversedBy: 'Ouvrage')]
     private ?Editeur $editeur = null;
 
     /**
      * @var Collection<int, Categorie>
      */
-    #[ORM\ManyToMany(targetEntity: Categorie::class, mappedBy: 'ouvrage')]
+    #[ORM\ManyToMany(targetEntity: Categorie::class, mappedBy: 'Ouvrage')]
     private Collection $categories;
 
     /**
      * @var Collection<int, Tags>
      */
-    #[ORM\ManyToMany(targetEntity: Tags::class, mappedBy: 'ouvrage')]
+    #[ORM\ManyToMany(targetEntity: Tags::class, mappedBy: 'Ouvrage')]
     private Collection $tags;
 
     public function __construct()
@@ -80,13 +80,6 @@ class Ouvrage
     public function setTitre(string $titre): static
     {
         $this->titre = $titre;
-
-        return $this;
-    }
-
-    public function setId(int $Id): static
-    {
-        $this->Id = $Id;
 
         return $this;
     }
