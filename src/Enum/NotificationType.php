@@ -4,7 +4,7 @@ namespace App\Enum;
 
 enum NotificationType: string
 {
-    case MESSAGE = 'sms';
+    case MESSAGE = 'SMS';
     case EMAIL = 'EMAIL';
-    case INTERNAL = 'INTERNAL';
+    case INTERNE = 'INTERNE';
 }
