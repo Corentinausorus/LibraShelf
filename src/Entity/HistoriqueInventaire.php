@@ -17,7 +17,7 @@ class HistoriqueInventaire
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'historiqueInventaires')]
-    private ?Exemplaires $exemplaire = null;
+    private ?Exemplaires $exemplaires = null;
 
     #[ORM\Column(enumType: StatusChanged::class)]
     private ?StatusChanged $type = null;
@@ -27,14 +27,14 @@ class HistoriqueInventaire
         return $this->id;
     }
 
-    public function getExemplaire(): ?Exemplaires
+    public function getExemplaires(): ?Exemplaires
     {
-        return $this->exemplaire;
+        return $this->exemplaires;
     }
 
-    public function setExemplaire(?Exemplaires $exemplaire): static
+    public function setExemplaires(?Exemplaires $exemplaires): static
     {
-        $this->exemplaire = $exemplaire;
+        $this->exemplaires = $exemplaires;
 
         return $this;
     }
