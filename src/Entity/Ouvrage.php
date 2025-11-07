@@ -22,13 +22,13 @@ class Ouvrage
     private ?string $titre = null;
 
     #[ORM\Column]
-    private ?int $ISBN = null;
+    private ?string $ISBN = null;
 
-    #[ORM\Column(type: Types::ARRAY, nullable: true)]
+    #[ORM\Column(type: Types::JSON, nullable: true)]
     private ?array $Langues = null;
 
-    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
-    private ?\DateTime $Année = null;
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $Année = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $Resume = null;
@@ -43,7 +43,7 @@ class Ouvrage
      * @var Collection<int, Exemplaires>
      */
     #[ORM\OneToMany(targetEntity: Exemplaires::class, mappedBy: 'Ouvrage')]
-    private Collection $Exemplaire;
+    private Collection $exemplaires;
 
     #[ORM\ManyToOne(inversedBy: 'Ouvrage')]
     private ?Editeur $editeur = null;
@@ -63,7 +63,7 @@ class Ouvrage
     public function __construct()
     {
         $this->auteurs = new ArrayCollection();
-        $this->Exemplaire = new ArrayCollection();
+        $this->exemplaires = new ArrayCollection();
         $this->categories = new ArrayCollection();
         $this->tags = new ArrayCollection();    }
 
@@ -158,27 +158,49 @@ class Ouvrage
     /**
      * @return Collection<int, Exemplaires>
      */
-    public function getExemplaire(): Collection
+    public function getExemplaires(): Collection
     {
-        return $this->Exemplaire;
+        return $this->exemplaires;
     }
 
-    public function addExemplaire(Exemplaires $exemplaire): static
+    public function getAuteurs(): Collection
     {
-        if (!$this->Exemplaire->contains($exemplaire)) {
-            $this->Exemplaire->add($exemplaire);
-            $exemplaire->setOuvrage($this);
+        return $this->auteurs;
+    }
+
+    public function getCategories(): Collection
+    {
+        return $this->categories;
+    }
+
+    public function getEditeur(): ?Editeur
+    {
+        return $this->editeur;
+    }
+
+    public function setEditeur(?Editeur $editeur): static
+    {
+        $this->editeur = $editeur;
+
+        return $this;
+    }
+
+    public function addExemplaires(Exemplaires $exemplaires): static
+    {
+        if (!$this->exemplaires->contains($exemplaires)) {
+            $this->exemplaires->add($exemplaires);
+            $exemplaires->setOuvrage($this);
         }
 
         return $this;
     }
 
-    public function removeExemplaire(Exemplaires $exemplaire): static
+    public function removeExemplaire(Exemplaires $exemplaires): static
     {
-        if ($this->Exemplaire->removeElement($exemplaire)) {
+        if ($this->exemplaires->removeElement($exemplaires)) {
             // set the owning side to null (unless already changed)
-            if ($exemplaire->getOuvrage() === $this) {
-                $exemplaire->setOuvrage(null);
+            if ($exemplaires->getOuvrage() === $this) {
+                $exemplaires->setOuvrage(null);
             }
         }
 

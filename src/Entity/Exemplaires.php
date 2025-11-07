@@ -24,16 +24,16 @@ class Exemplaires
     #[ORM\Column]
     private ?bool $disponible = null;
 
-    #[ORM\ManyToOne(inversedBy: 'Exemplaire')]
+    #[ORM\ManyToOne(inversedBy: 'exemplaires')]
     private ?Reservation $reservation = null;
 
-    #[ORM\ManyToOne(inversedBy: 'Exemplaire')]
+    #[ORM\ManyToOne(inversedBy: 'exemplaires')]
     private ?Ouvrage $ouvrage = null;
 
     /**
      * @var Collection<int, HistoriqueInventaire>
      */
-    #[ORM\OneToMany(targetEntity: HistoriqueInventaire::class, mappedBy: 'exemplaire')]
+    #[ORM\OneToMany(targetEntity: HistoriqueInventaire::class, mappedBy: 'exemplaires')]
     private Collection $historiqueInventaires;
 
     public function __construct()
@@ -118,7 +118,7 @@ class Exemplaires
     {
         if (!$this->historiqueInventaires->contains($historiqueInventaire)) {
             $this->historiqueInventaires->add($historiqueInventaire);
-            $historiqueInventaire->setExemplaire($this);
+            $historiqueInventaire->setExemplaires($this);
         }
 
         return $this;
@@ -128,8 +128,8 @@ class Exemplaires
     {
         if ($this->historiqueInventaires->removeElement($historiqueInventaire)) {
             // set the owning side to null (unless already changed)
-            if ($historiqueInventaire->getExemplaire() === $this) {
-                $historiqueInventaire->setExemplaire(null);
+            if ($historiqueInventaire->getExemplaires() === $this) {
+                $historiqueInventaire->setExemplaires(null);
             }
         }
 
