@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Entity\Ouvrage;
 use App\Repository\AuteurRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -24,11 +25,11 @@ class Auteur
      * @var Collection<int, Ouvrage>
      */
     #[ORM\ManyToMany(targetEntity: Ouvrage::class, inversedBy: 'auteurs')]
-    private Collection $Livre;
+    private Collection $Ouvrage;
 
     public function __construct()
     {
-        $this->Livre = new ArrayCollection();
+        $this->Ouvrage = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -51,23 +52,24 @@ class Auteur
     /**
      * @return Collection<int, Ouvrage>
      */
-    public function getLivre(): Collection
+    public function getOuvrage(): Collection
     {
-        return $this->Livre;
+        return $this->Ouvrage;
     }
 
-    public function addLivre(Ouvrage $livre): static
+    public function addOuvrage(Ouvrage $Ouvrage): static
     {
-        if (!$this->Livre->contains($livre)) {
-            $this->Livre->add($livre);
+        if (!$this->Ouvrage->contains($Ouvrage)) {
+            $this->Ouvrage->add($Ouvrage);
+            $Ouvrage->addAuteur($this);
         }
 
         return $this;
     }
 
-    public function removeLivre(Ouvrage $livre): static
+    public function removeLivre(Ouvrage $Ouvrage): static
     {
-        $this->Livre->removeElement($livre);
+        $this->Ouvrage->removeElement($Ouvrage);
 
         return $this;
     }
