@@ -10,7 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\UX\Turbo\Attribute\Broadcast;
 
 #[ORM\Entity(repositoryClass: AuteurRepository::class)]
-#[Broadcast]
+//#[Broadcast]
 class Auteur
 {
     #[ORM\Id]
@@ -24,12 +24,12 @@ class Auteur
     /**
      * @var Collection<int, Ouvrage>
      */
-    #[ORM\ManyToMany(targetEntity: Ouvrage::class, inversedBy: 'auteurs')]
-    private Collection $Ouvrage;
+    #[ORM\ManyToMany(targetEntity: Ouvrage::class, mappedBy: 'auteurs')]
+    private Collection $ouvrages;
 
     public function __construct()
     {
-        $this->Ouvrage = new ArrayCollection();
+        $this->ouvrages = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -54,22 +54,22 @@ class Auteur
      */
     public function getOuvrage(): Collection
     {
-        return $this->Ouvrage;
+        return $this->ouvrages;
     }
 
-    public function addOuvrage(Ouvrage $Ouvrage): static
+    public function addOuvrage(Ouvrage $ouvrages): static
     {
-        if (!$this->Ouvrage->contains($Ouvrage)) {
-            $this->Ouvrage->add($Ouvrage);
-            $Ouvrage->addAuteur($this);
+        if (!$this->ouvrages->contains($ouvrages)) {
+            $this->ouvrages->add($ouvrages);
+            $ouvrages->addAuteur($this);
         }
 
         return $this;
     }
 
-    public function removeLivre(Ouvrage $Ouvrage): static
+    public function removeOuvrage(Ouvrage $ouvrages): static
     {
-        $this->Ouvrage->removeElement($Ouvrage);
+        $this->ouvrages->removeElement($ouvrages);
 
         return $this;
     }

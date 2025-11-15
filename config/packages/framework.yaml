@@ -13,3 +13,9 @@ when@test:
         test: true
         session:
             storage_factory_id: session.storage.factory.mock_file
+
+# config/packages/dev/framework.yaml
+when@dev:
+    services:
+        Symfony\Component\Mercure\HubInterface:
+            synthetic: true

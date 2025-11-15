@@ -19,11 +19,11 @@ class Tags
      * @var Collection<int, Ouvrage>
      */
     #[ORM\ManyToMany(targetEntity: Ouvrage::class, inversedBy: 'tags')]
-    private Collection $ouvrage;
+    private Collection $ouvrages;
 
     public function __construct()
     {
-        $this->ouvrage = new ArrayCollection();
+        $this->ouvrages = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -36,21 +36,21 @@ class Tags
      */
     public function getOuvrage(): Collection
     {
-        return $this->ouvrage;
+        return $this->ouvrages;
     }
 
-    public function addOuvrage(Ouvrage $ouvrage): static
+    public function addOuvrage(Ouvrage $ouvrages): static
     {
-        if (!$this->ouvrage->contains($ouvrage)) {
-            $this->ouvrage->add($ouvrage);
+        if (!$this->ouvrages->contains($ouvrages)) {
+            $this->ouvrages->add($ouvrages);
         }
 
         return $this;
     }
 
-    public function removeOuvrage(Ouvrage $ouvrage): static
+    public function removeOuvrage(Ouvrage $ouvrages): static
     {
-        $this->ouvrage->removeElement($ouvrage);
+        $this->ouvrages->removeElement($ouvrages);
 
         return $this;
     }

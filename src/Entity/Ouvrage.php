@@ -10,7 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\UX\Turbo\Attribute\Broadcast;
 
 #[ORM\Entity(repositoryClass: OuvrageRepository::class)]
-#[Broadcast]
+//#[Broadcast]
 class Ouvrage
 {
     #[ORM\Id]
@@ -36,28 +36,31 @@ class Ouvrage
     /**
      * @var Collection<int, Auteur>
      */
-    #[ORM\ManyToMany(targetEntity: Auteur::class, mappedBy: 'Ouvrage')]
+    #[ORM\ManyToMany(targetEntity: Auteur::class, inversedBy: 'ouvrages')]
+    //#[ORM\JoinTable(name: 'auteur_ouvrage')]
     private Collection $auteurs;
 
     /**
      * @var Collection<int, Exemplaires>
      */
-    #[ORM\OneToMany(targetEntity: Exemplaires::class, mappedBy: 'Ouvrage')]
+    #[ORM\OneToMany(targetEntity: Exemplaires::class, mappedBy: 'ouvrage')]
     private Collection $exemplaires;
 
-    #[ORM\ManyToOne(inversedBy: 'Ouvrage')]
+    #[ORM\ManyToOne(inversedBy: 'ouvrage')]
     private ?Editeur $editeur = null;
 
     /**
      * @var Collection<int, Categorie>
      */
-    #[ORM\ManyToMany(targetEntity: Categorie::class, mappedBy: 'Ouvrage')]
+    #[ORM\ManyToMany(targetEntity: Categorie::class, inversedBy: 'ouvrages')]
+    //#[ORM\JoinTable(name: 'categorie_ouvrage')]
     private Collection $categories;
 
     /**
      * @var Collection<int, Tags>
      */
-    #[ORM\ManyToMany(targetEntity: Tags::class, mappedBy: 'Ouvrage')]
+    #[ORM\ManyToMany(targetEntity: Tags::class, inversedBy: 'ouvrages')]
+    //#[ORM\JoinTable(name: 'tags_ouvrage')]
     private Collection $tags;
 
     public function __construct()
@@ -135,7 +138,7 @@ class Ouvrage
     {
         if (!$this->auteurs->contains($auteur)) {
             $this->auteurs->add($auteur);
-            $auteur->addLivre($this);
+            $auteur->addOuvrage($this);
         }
 
         return $this;
@@ -144,7 +147,7 @@ class Ouvrage
     public function removeAuteur(Auteur $auteur): static
     {
         if ($this->auteurs->removeElement($auteur)) {
-            $auteur->removeLivre($this);
+            $auteur->removeOuvrage($this);
         }
 
         return $this;
