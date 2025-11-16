@@ -1,20 +1,42 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello OuvrageController!{% endblock %}
+{% block title %}Liste des ouvrages{% endblock %}
 
 {% block body %}
-<style>
-    .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
-    .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
-</style>
+<h1>Liste des ouvrages</h1>
 
-<div class="example-wrapper">
-    <h1>Hello {{ controller_name }}! ✅</h1>
+<a href="{{ path('app_ouvrage_new') }}">Ajouter un nouvel ouvrage</a>
 
-    This friendly message is coming from:
-    <ul>
-        <li>Your controller at <code>C:/Users/Meersseman Gilles/LibraShelf/LibraShelf/src/Controller/OuvrageController.php</code></li>
-        <li>Your template at <code>C:/Users/Meersseman Gilles/LibraShelf/LibraShelf/templates/ouvrage/index.html.twig</code></li>
-    </ul>
-</div>
+<table>
+    <thead>
+        <tr>
+            <th>Titre</th>
+            <th>ISBN</th>
+            <th>Auteurs</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for ouvrage in ouvrages %}
+        <tr>
+            <td>{{ ouvrage.titre }}</td>
+            <td>{{ ouvrage.ISBN }}</td>
+            <td>
+                {% for auteur in ouvrage.auteurs %}
+                    {{ auteur.nom }}{% if not loop.last %}, {% endif %}
+                {% endfor %}
+            </td>
+            {#}
+            <td>
+                <a href="{{ path('app_ouvrage_show', {'id': ouvrage.id}) }}">Voir</a>
+                <a href="{{ path('app_ouvrage_edit', {'id': ouvrage.id}) }}">Modifier</a>
+                <form method="post" action="{{ path('app_ouvrage_delete', {'id': ouvrage.id}) }}" style="display:inline;">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ ouvrage.id) }}">
+                    <button type="submit">Supprimer</button>
+                </form>
+            </td>#}
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
 {% endblock %}
