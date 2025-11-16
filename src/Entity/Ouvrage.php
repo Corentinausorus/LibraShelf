@@ -210,20 +210,20 @@ class Ouvrage
         return $this;
     }
 
-    public function addCategory(Categorie $category): static
+    public function addCategories(Categorie $categories): static
     {
-        if (!$this->categories->contains($category)) {
-            $this->categories->add($category);
-            $category->addOuvrage($this);
+        if (!$this->categories->contains($categories)) {
+            $this->categories->add($categories);
+            $categories->addOuvrage($this);
         }
 
         return $this;
     }
 
-    public function removeCategory(Categorie $category): static
+    public function removeCategories(Categorie $categories): static
     {
-        if ($this->categories->removeElement($category)) {
-            $category->removeOuvrage($this);
+        if ($this->categories->removeElement($categories)) {
+            $categories->removeOuvrage($this);
         }
 
         return $this;

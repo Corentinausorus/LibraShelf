@@ -2,26 +2,27 @@
 
 namespace App\DataFixtures;
 
-use App\Entity\Auteur;
+use App\Entity\Categorie;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 use Faker\Factory;
 
-class AuteurFixtures extends Fixture
+
+class CategorieFixtures extends Fixture
 {
-    public const AUTEUR_REFERENCE = 'auteur_';
+    public const CATEGORIE_REFERENCE = 'categorie_';
 
     public function load(ObjectManager $manager): void
     {
         $faker = Factory::create('fr_FR');
 
         for ($i = 0; $i < 10; $i++) {
-            $auteur = new Auteur();
-            $auteur->setNom($faker->name());
+            $categorie = new Categorie();
+            $categorie->setNom($faker->word());
 
-            $manager->persist($auteur);
+            $manager->persist($categorie);
 
-            $this->addReference(self::AUTEUR_REFERENCE . $i, $auteur);
+            $this->addReference(self::CATEGORIE_REFERENCE . $i, $categorie);
         }
 
         $manager->flush();
