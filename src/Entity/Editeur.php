@@ -11,7 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
 class Editeur
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
+    #[ORM\GenertedValue]
     #[ORM\Column]
     private ?int $id = null;
 
