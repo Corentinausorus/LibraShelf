@@ -20,7 +20,7 @@ class UserFixtures extends Fixture
             $user->setNom($faker->name());
             $user->setEmail($faker->email());
             $user->setPassword(password_hash('password', PASSWORD_BCRYPT));
-            $user->setRoles(['ROLE_USER']);
+            $user->setRole([Role::ROLE_USER]);
             $manager->persist($user);
         }
         $manager->flush();
