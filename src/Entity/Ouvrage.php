@@ -133,7 +133,19 @@ class Ouvrage
 
         return $this;
     }
+    #[ORM\ManyToOne(inversedBy: 'ouvrages')]
+    private ?User $createdBy = null;
 
+    public function getCreatedBy(): ?User
+    {
+        return $this->createdBy;
+    }
+
+    public function setCreatedBy(?User $user): self
+    {
+        $this->createdBy = $user;
+        return $this;
+    }
     public function addAuteur(Auteur $auteur): static
     {
         if (!$this->auteurs->contains($auteur)) {
