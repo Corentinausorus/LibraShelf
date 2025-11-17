@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello RegistrationController!{% endblock %}
+
+{% block body %}
+    {{ form_start(registrationForm) }}
+        {{ form_row(registrationForm.nom) }}
+        {{ form_row(registrationForm.email) }}
+        {{ form_row(registrationForm.agreeTerms) }}
+        {{ form_row(registrationForm.plainPassword) }}
+
+    <button type="submit">Créer le compte</button>
+
+    {{ form_end(registrationForm) }}
+
+{% endblock %}
