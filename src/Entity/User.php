@@ -10,9 +10,12 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
+#[UniqueEntity(fields: ['email'], message: 'Cette adresse e-mail est déjà utilisée.')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -25,34 +28,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Assert\Email]
     private string $email;
 
-    /**
-     * @var string The hashed password
-     */
     #[ORM\Column]
     private ?string $password = null;
 
-    /**
-     * @var Collection<int, Emprunt>
-     */
     #[ORM\OneToMany(targetEntity: Emprunt::class, mappedBy: 'User')]
     private Collection $emprunts;
 
-    /**
-     * @var Collection<int, Reservation>
-     */
     #[ORM\OneToMany(targetEntity: Reservation::class, mappedBy: 'User')]
     private Collection $reservations;
 
-    /**
-     * @var Collection<int, Penalites>
-     */
     #[ORM\OneToMany(targetEntity: Penalites::class, mappedBy: 'user')]
     private Collection $penalites;
 
     #[ORM\Column(length: 255)]
     private ?string $nom = null;
 
-    #[ORM\Column(type: Types::SIMPLE_ARRAY, enumType: Role::class)]
+    // MODIFICATION ICI : utiliser JSON au lieu de SIMPLE_ARRAY avec enumType
+    #[ORM\Column(type: Types::JSON)]
     private array $roles = [];
 
     public function __construct()
@@ -75,23 +67,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setEmail(string $email): static
     {
         $this->email = $email;
-
         return $this;
     }
 
-    /**
-     * A visual identifier that represents this user.
-     *
-     * @see UserInterface
-     */
     public function getUserIdentifier(): string
     {
         return (string) $this->email;
     }
 
-    /**
-     * @see PasswordAuthenticatedUserInterface
-     */
     public function getPassword(): ?string
     {
         return $this->password;
@@ -100,114 +83,42 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPassword(string $password): static
     {
         $this->password = $password;
-
         return $this;
     }
 
-    /**
-     * Ensure the session doesn't contain actual password hashes by CRC32C-hashing them, as supported since Symfony 7.3.
-     */
     public function __serialize(): array
     {
         $data = (array) $this;
         $data["\0" . self::class . "\0password"] = hash('crc32c', $this->password);
-        
         return $data;
     }
 
-    #[\Deprecated]
     public function eraseCredentials(): void
     {
         // @deprecated, to be removed when upgrading to Symfony 8
     }
 
     /**
-     * @return Collection<int, Emprunt>
+     * @return string[]
      */
-    public function getEmprunts(): Collection
+    public function getRoles(): array
     {
-        return $this->emprunts;
+        $roles = $this->roles;
+        
+        // Garantir qu'il y a au moins ROLE_USER
+        $roles[] = 'ROLE_USER';
+        
+        return array_unique($roles);
     }
 
-    public function addEmprunt(Emprunt $emprunt): static
+    public function setRoles(array $roles): static
     {
-        if (!$this->emprunts->contains($emprunt)) {
-            $this->emprunts->add($emprunt);
-            $emprunt->setUser($this);
-        }
-
-        return $this;
-    }
-
-    public function removeEmprunt(Emprunt $emprunt): static
-    {
-        if ($this->emprunts->removeElement($emprunt)) {
-            // set the owning side to null (unless already changed)
-            if ($emprunt->getUser() === $this) {
-                $emprunt->setUser(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Reservation>
-     */
-    public function getReservations(): Collection
-    {
-        return $this->reservations;
-    }
-
-    public function addReservation(Reservation $reservation): static
-    {
-        if (!$this->reservations->contains($reservation)) {
-            $this->reservations->add($reservation);
-            $reservation->setUser($this);
-        }
-
-        return $this;
-    }
-
-    public function removeReservation(Reservation $reservation): static
-    {
-        if ($this->reservations->removeElement($reservation)) {
-            // set the owning side to null (unless already changed)
-            if ($reservation->getUser() === $this) {
-                $reservation->setUser(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Penalites>
-     */
-    public function getPenalites(): Collection
-    {
-        return $this->penalites;
-    }
-
-    public function addPenalite(Penalites $penalite): static
-    {
-        if (!$this->penalites->contains($penalite)) {
-            $this->penalites->add($penalite);
-            $penalite->setUser($this);
-        }
-
-        return $this;
-    }
-
-    public function removePenalite(Penalites $penalite): static
-    {
-        if ($this->penalites->removeElement($penalite)) {
-            // set the owning side to null (unless already changed)
-            if ($penalite->getUser() === $this) {
-                $penalite->setUser(null);
-            }
-        }
-
+        // Convertir les Role enums en strings
+        $this->roles = array_map(
+            fn($role) => $role instanceof Role ? $role->value : $role,
+            $roles
+        );
+        
         return $this;
     }
 
@@ -219,22 +130,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setNom(string $nom): static
     {
         $this->nom = $nom;
-
         return $this;
     }
 
-    /**
-     * @return Roles[]
-     */
-    public function getRoles(): array
-    {
-        return $this->role;
-    }
-
-    public function setRoles(array $roles): static
-    {
-        $this->roles = $roles;
-
-        return $this;
-    }
+    // ... getters/setters pour emprunts, reservations, penalites ...
 }
