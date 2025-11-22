@@ -1,0 +1,60 @@
+{# templates/member/dashboard.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon espace - LibraShelf{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <div class="row">
+        {# Menu latéral #}
+        <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+            <div class="position-sticky pt-3">
+                <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
+                    <span>Mon espace</span>
+                </h6>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ path('member_dashboard') }}">
+                            Tableau de bord
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ path('member_books') }}">
+                            Catalogue
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ path('member_loans') }}">
+                            Mes emprunts
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ path('member_reservations') }}">
+                            Mes réservations
+                        </a>
+                    </li>
+                </ul>
+
+                <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
+                    <span>Compte</span>
+                </h6>
+                <ul class="nav flex-column mb-2">
+                    {#<li class="nav-item">
+                    
+                        <a class="nav-link" href="{{ path('member_profile') }}">
+                            👤 Mon profil
+                        </a>
+                    </li>#}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ path('app_logout') }}">
+                            Se déconnecter
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        
+    </div>
+</div>
+{% endblock %}

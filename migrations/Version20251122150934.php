@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20251122115809 extends AbstractMigration
+final class Version20251122150934 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -25,6 +25,12 @@ final class Version20251122115809 extends AbstractMigration
         $this->addSql('CREATE TABLE editeur (id INTEGER NOT NULL, nom VARCHAR(255) NOT NULL, PRIMARY KEY(id))');
         $this->addSql('INSERT INTO editeur (id, nom) SELECT id, nom FROM __temp__editeur');
         $this->addSql('DROP TABLE __temp__editeur');
+        $this->addSql('CREATE TEMPORARY TABLE __temp__user AS SELECT id, email, password, nom FROM user');
+        $this->addSql('DROP TABLE user');
+        $this->addSql('CREATE TABLE user (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, email VARCHAR(180) NOT NULL, password VARCHAR(255) NOT NULL, nom VARCHAR(255) NOT NULL, role VARCHAR(50) DEFAULT \'ROLE_MEMBER\' NOT NULL)');
+        $this->addSql('INSERT INTO user (id, email, password, nom) SELECT id, email, password, nom FROM __temp__user');
+        $this->addSql('DROP TABLE __temp__user');
+        $this->addSql('CREATE UNIQUE INDEX UNIQ_IDENTIFIER_EMAIL ON user (email)');
     }
 
     public function down(Schema $schema): void
@@ -35,5 +41,12 @@ final class Version20251122115809 extends AbstractMigration
         $this->addSql('CREATE TABLE editeur (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, nom VARCHAR(255) NOT NULL)');
         $this->addSql('INSERT INTO editeur (id, nom) SELECT id, nom FROM __temp__editeur');
         $this->addSql('DROP TABLE __temp__editeur');
+        $this->addSql('CREATE TEMPORARY TABLE __temp__user AS SELECT id, email, password, nom FROM user');
+        $this->addSql('DROP TABLE user');
+        $this->addSql('CREATE TABLE user (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, email VARCHAR(180) NOT NULL, password VARCHAR(255) NOT NULL, nom VARCHAR(255) NOT NULL, roles CLOB NOT NULL --(DC2Type:json)
+        )');
+        $this->addSql('INSERT INTO user (id, email, password, nom) SELECT id, email, password, nom FROM __temp__user');
+        $this->addSql('DROP TABLE __temp__user');
+        $this->addSql('CREATE UNIQUE INDEX UNIQ_IDENTIFIER_EMAIL ON user (email)');
     }
 }

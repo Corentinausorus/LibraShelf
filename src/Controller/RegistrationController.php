@@ -32,11 +32,11 @@ class RegistrationController extends AbstractController
             
             // Vérifier les codes d'invitation
             if ($inviteCode === $librarianInviteCode) {
-                $user->setRoles([Role::LIBRARIAN->value]);
+                $user->setRole(Role::LIBRARIAN->value);
                 $this->addFlash('success', 'Bienvenue ! Vous êtes enregistré comme bibliothécaire.');
             } else {
                 $this->addFlash('warning', 'Code d\'invitation invalide. Vous êtes inscrit comme membre.');
-                $user->setRoles([Role::MEMBER->value]);
+                $user->setRole(Role::MEMBER->value);
 
             }
                         

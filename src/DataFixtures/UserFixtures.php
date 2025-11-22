@@ -24,7 +24,7 @@ class UserFixtures extends Fixture
         $admin->setEmail('admin@librashelf.local');
         $admin->setNom('Admin Principal');
         $admin->setPassword($this->passwordHasher->hashPassword($admin, 'admin123'));
-        $admin->setRoles(['ROLE_ADMIN']);
+        $admin->setRole('ROLE_ADMIN');
         $manager->persist($admin);
         
         // 3 Bibliothécaires
@@ -33,7 +33,7 @@ class UserFixtures extends Fixture
             $librarian->setEmail("librarian{$i}@librashelf.local");
             $librarian->setNom($faker->name());
             $librarian->setPassword($this->passwordHasher->hashPassword($librarian, 'librarian123'));
-            $librarian->setRoles(['ROLE_LIBRARIAN']);
+            $librarian->setRole('ROLE_LIBRARIAN');
             $manager->persist($librarian);
         }
         
@@ -43,7 +43,7 @@ class UserFixtures extends Fixture
             $member->setEmail($faker->unique()->safeEmail());
             $member->setNom($faker->name());
             $member->setPassword($this->passwordHasher->hashPassword($member, 'member123'));
-            $member->setRoles(['ROLE_MEMBER']);
+            $member->setRole('ROLE_MEMBER');
             $manager->persist($member);
             
             if ($i <= 10) {

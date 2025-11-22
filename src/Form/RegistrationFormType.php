@@ -40,7 +40,7 @@ class RegistrationFormType extends AbstractType
                 ],
             ])
             ->add('inviteCode', TextType::class, [
-            'label' => 'Code d\'invitation (optionnel pour devenir bibliothécaire/librarian)',
+            'label' => 'Vous êtes bibliothécaire ? Utilisez un code d\'invitation (optionnel pour devenir bibliothécaire/librarian)',
             'required' => false,
             'mapped' => false,
             ])

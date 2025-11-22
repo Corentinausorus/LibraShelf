@@ -43,9 +43,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255)]
     private ?string $nom = null;
 
-    // MODIFICATION ICI : utiliser JSON au lieu de SIMPLE_ARRAY avec enumType
-    #[ORM\Column(type: Types::JSON)]
-    private array $roles = [];
+    #[ORM\Column(type: 'string', length: 50, options: ["default" => "ROLE_MEMBER"])]
+    private string $role = Role::MEMBER->value; // rôle par défaut
+
+    public function getRole(): string
+    {
+        return $this->role;
+    }
 
     public function __construct()
     {
@@ -103,22 +107,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getRoles(): array
     {
-        $roles = $this->roles;
-        
-        // Garantir qu'il y a au moins ROLE_USER
-        $roles[] = Role::MEMBER->value;
-        
-        return array_unique($roles);
+        return [$this->role];
     }
 
-    public function setRoles(array $roles): static
+    public function setRole(string|Role $role): static
     {
-        // Convertir les Role enums en strings
-        $this->roles = array_map(
-            fn($role) => $role instanceof Role ? $role->value : $role,
-            $roles
-        );
-        
+        $this->role = $role instanceof Role ? $role->value : $role;
         return $this;
     }
 
