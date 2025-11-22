@@ -6,23 +6,51 @@ use App\Entity\User;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 use Faker\Factory;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class UserFixtures extends Fixture
 {
+    public function __construct(
+        private UserPasswordHasherInterface $passwordHasher
+    ) {
+    }
+
     public function load(ObjectManager $manager): void
     {
-        // $product = new Product();
-        // $manager->persist($product);
-        $n = 10;
         $faker = Factory::create('fr_FR');
-        for ($i = 0; $i < $n; $i++) {
-            $user = new User();
-            $user->setNom($faker->name());
-            $user->setEmail($faker->email());
-            $user->setPassword(password_hash('password', PASSWORD_BCRYPT));
-            $user->setRole([Role::ROLE_USER]);
-            $manager->persist($user);
+        
+        // 1 Admin
+        $admin = new User();
+        $admin->setEmail('admin@librashelf.local');
+        $admin->setNom('Admin Principal');
+        $admin->setPassword($this->passwordHasher->hashPassword($admin, 'admin123'));
+        $admin->setRoles(['ROLE_ADMIN']);
+        $manager->persist($admin);
+        
+        // 3 Bibliothécaires
+        for ($i = 1; $i <= 3; $i++) {
+            $librarian = new User();
+            $librarian->setEmail("librarian{$i}@librashelf.local");
+            $librarian->setNom($faker->name());
+            $librarian->setPassword($this->passwordHasher->hashPassword($librarian, 'librarian123'));
+            $librarian->setRoles(['ROLE_LIBRARIAN']);
+            $manager->persist($librarian);
         }
+        
+        // 50 Membres
+        for ($i = 1; $i <= 50; $i++) {
+            $member = new User();
+            $member->setEmail($faker->unique()->safeEmail());
+            $member->setNom($faker->name());
+            $member->setPassword($this->passwordHasher->hashPassword($member, 'member123'));
+            $member->setRoles(['ROLE_MEMBER']);
+            $manager->persist($member);
+            
+            if ($i <= 10) {
+                $this->addReference('member_' . $i, $member);
+            }
+        }
+        
         $manager->flush();
     }
 }
