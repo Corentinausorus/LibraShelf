@@ -4,12 +4,13 @@
 
 {% block body %}
 {% if app.user %}
-        <div class="mb-3">
-            You are logged in as {{ app.user.userIdentifier }}, <a href="{{ path('app_logout') }}">Logout</a>
-        </div>
-    {% endif %}
+    <div class="mb-3">
+        Connecté en tant que {{ app.user.userIdentifier }} :
+        {{ app.user.getRoles()|join(', ') }} <br>
+        <a href="{{ path('app_logout') }}">Logout</a>
+    </div>
+{% endif %}
 <h1>Liste des ouvrages</h1>
-
 <a href="{{ path('app_ouvrage_new') }}">Ajouter un nouvel ouvrage</a>
 
 <table>
