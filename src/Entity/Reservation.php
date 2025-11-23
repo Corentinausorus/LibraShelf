@@ -18,16 +18,16 @@ class Reservation
     private ?int $id = null;
 
     #[ORM\Column]
-    private ?\DateTime $creationDate = null;
+    private ?\DateTimeImmutable $creationDate = null;
 
     /**
      * @var Collection<int, Exemplaires>
      */
     #[ORM\OneToMany(targetEntity: Exemplaires::class, mappedBy: 'reservation')]
-    private Collection $Exemplaire;
+    private Collection $exemplaires;
 
     #[ORM\ManyToOne(inversedBy: 'reservations')]
-    private ?User $User = null;
+    private ?User $user = null;
 
     public function __construct()
     {
@@ -39,12 +39,12 @@ class Reservation
         return $this->id;
     }
 
-    public function getCreationDate(): ?\DateTime
+    public function getCreationDate(): ?\DateTimeImmutable
     {
         return $this->creationDate;
     }
 
-    public function setCreationDate(\DateTime $creationDate): static
+    public function setCreationDate(\DateTimeImmutable $creationDate): static
     {
         $this->creationDate = $creationDate;
 
@@ -54,16 +54,16 @@ class Reservation
     /**
      * @return Collection<int, Exemplaires>
      */
-    public function getExemplaire(): Collection
+    public function getExemplaires(): Collection
     {
-        return $this->Exemplaire;
+        return $this->exemplaires;
     }
 
-    public function addExemplaire(Exemplaires $exemplaire): static
+    public function addExemplaires(Exemplaires $exemplaires): static
     {
-        if (!$this->Exemplaire->contains($exemplaire)) {
-            $this->Exemplaire->add($exemplaire);
-            $exemplaire->setReservation($this);
+        if (!$this->exemplaires->contains($exemplaires)) {
+            $this->exemplaires->add($exemplaires);
+            $exemplaires->setReservation($this);
         }
 
         return $this;
@@ -83,12 +83,12 @@ class Reservation
 
     public function getUser(): ?User
     {
-        return $this->User;
+        return $this->user;
     }
 
-    public function setUser(?User $User): static
+    public function setUser(?User $user): static
     {
-        $this->User = $User;
+        $this->user = $user;
 
         return $this;
     }

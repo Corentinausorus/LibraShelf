@@ -1,0 +1,68 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ouvrages{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1 class="mb-4">Liste des ouvrages</h1>
+
+    <div class="row">
+        {% for ouvrage in ouvrages %}
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ ouvrage.titre }}</h5>
+
+                        <p class="card-text">
+                            Auteurs :
+                            {% if ouvrage.auteurs is empty %}
+                                <em>Aucun auteur</em>
+                            {% else %}
+                                {% for auteur in ouvrage.auteurs %}
+                                    <strong>{{ auteur.nom }}</strong>{% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                            <br>
+
+                            Catégories :
+                            {% if ouvrage.categories is empty %}
+                                <em>Aucune</em>
+                            {% else %}
+                                {% for cat in ouvrage.categories %}
+                                    {{ cat.nom }}{% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        </p>
+
+                        <h6>Exemplaires disponibles :</h6>
+
+                        {% set disponibles = ouvrage.exemplaires|filter(e => e.disponible) %}
+
+                        {% if disponibles is empty %}
+                            <span class="badge bg-danger">Aucun disponible</span>
+                            <a href="{{ path('member_reserve_ouvrage', { id: ouvrage.id }) }}"
+                            class="btn btn-warning btn-sm mt-2">
+                            Réserver
+                            </a>
+                        {% else %}
+                            <ul class="list-group mt-2">
+                                {% for ex in disponibles %}
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Cote : {{ ex.cote }}
+
+                                        <a href="{{ path('member_reserve_exemplaire', { id: ex.id }) }}"
+                                           class="btn btn-primary btn-sm">
+                                            Réserver
+                                        </a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

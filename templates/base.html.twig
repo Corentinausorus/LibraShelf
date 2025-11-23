@@ -59,7 +59,7 @@
                     
                     {% if is_granted('ROLE_MEMBER') %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ path('member_books') }}">
+                            <a class="nav-link" href="{{ path('member_ouvrages') }}">
                                 <i class="bi bi-search"></i> Rechercher
                             </a>
                         </li>
@@ -120,6 +120,7 @@
     
     {% block javascripts %}{% endblock %}
 
+    {% if app.user %}
     <footer class="bg-light text-center text-muted py-3 mt-5">
         <div class="mb-3">
         Connecté en tant que {{ app.user.userIdentifier }} :
@@ -127,5 +128,6 @@
         <a href="{{ path('app_logout') }}">Logout</a>
     </div>
     </footer>
+    {% endif %}
 </body>
 </html>

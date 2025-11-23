@@ -36,6 +36,9 @@ class Exemplaires
     #[ORM\OneToMany(targetEntity: HistoriqueInventaire::class, mappedBy: 'exemplaires')]
     private Collection $historiqueInventaires;
 
+    #[ORM\OneToOne(mappedBy: 'exemplaire', cascade: ['persist', 'remove'])]
+    private ?Emprunt $emprunt = null;
+
     public function __construct()
     {
         $this->historiqueInventaires = new ArrayCollection();
@@ -132,6 +135,28 @@ class Exemplaires
                 $historiqueInventaire->setExemplaires(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getEmprunt(): ?Emprunt
+    {
+        return $this->emprunt;
+    }
+
+    public function setEmprunt(?Emprunt $emprunt): static
+    {
+        // unset the owning side of the relation if necessary
+        if ($emprunt === null && $this->emprunt !== null) {
+            $this->emprunt->setExemplaire(null);
+        }
+
+        // set the owning side of the relation if necessary
+        if ($emprunt !== null && $emprunt->getExemplaire() !== $this) {
+            $emprunt->setExemplaire($this);
+        }
+
+        $this->emprunt = $emprunt;
 
         return $this;
     }

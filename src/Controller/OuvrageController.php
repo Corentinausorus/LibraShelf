@@ -19,7 +19,7 @@ final class OuvrageController extends AbstractController
     }
         */
 
-    #[Route('/ouvrage', name: 'app_ouvrage_new')]
+    #[Route('/ouvrage', name: 'ouvrage_liste')]
     public function index(OuvrageRepository $ouvrageRepository): Response
     {
         return $this->render('ouvrage/index.html.twig', [
