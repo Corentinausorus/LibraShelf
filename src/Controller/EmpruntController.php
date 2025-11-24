@@ -3,46 +3,79 @@
 namespace App\Controller;
 
 use App\Entity\Emprunt;
-use App\Entity\Exemplaires;
+use App\Form\EmpruntType;
+use App\Repository\EmpruntRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/emprunt')]
 final class EmpruntController extends AbstractController
 {
-    #[Route('/add/{id}', name: 'app_emprunt_add', methods: ['GET'])]
-    public function add(Exemplaires $exemplaire, EntityManagerInterface $entityManager): Response
+    #[Route(name: 'app_emprunt_index', methods: ['GET'])]
+    public function index(EmpruntRepository $empruntRepository): Response
     {
-        $user = $this->getUser();
-        if (!$user) {
-            return $this->redirectToRoute('app_login');
-        }
+        return $this->render('member/loans.html.twig', [
+            'emprunts' => $empruntRepository->findAll(),
+        ]);
+    }
 
-        if (!$exemplaire->isDisponible()) {
-            $this->addFlash('danger', 'Cet exemplaire n\'est plus disponible.');
-            return $this->redirectToRoute('member_ouvrages');
-        }
-
+    #[Route('/new', name: 'app_emprunt_new', methods: ['GET', 'POST'])]
+    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    {
         $emprunt = new Emprunt();
-        
-        // --- CORRECTION ICI ---
-        // Remplacez setAdherent($user) par setUser($user)
-        $emprunt->setUser($user); 
-        // ----------------------
+        $form = $this->createForm(EmpruntType::class, $emprunt);
+        $form->handleRequest($request);
 
-        $emprunt->setExemplaire($exemplaire);
-        $emprunt->setDateEmprunt(new \DateTimeImmutable());
-        $emprunt->setDateRetourPrevu((new \DateTimeImmutable())->modify('+15 days'));
-        
-        $exemplaire->setDisponible(false);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->persist($emprunt);
+            $entityManager->flush();
 
-        $entityManager->persist($emprunt);
-        $entityManager->flush();
+            return $this->redirectToRoute('app_emprunt_index', [], Response::HTTP_SEE_OTHER);
+        }
 
-        $this->addFlash('success', 'Emprunt validé pour l\'ouvrage : ' . $exemplaire->getOuvrage()->getTitre());
+        return $this->render('emprunt/new.html.twig', [
+            'emprunt' => $emprunt,
+            'form' => $form,
+        ]);
+    }
 
-        return $this->redirectToRoute('member_ouvrages'); 
+    #[Route('/{id}', name: 'app_emprunt_show', methods: ['GET'])]
+    public function show(Emprunt $emprunt): Response
+    {
+        return $this->render('emprunt/show.html.twig', [
+            'emprunt' => $emprunt,
+        ]);
+    }
+
+    #[Route('/{id}/edit', name: 'app_emprunt_edit', methods: ['GET', 'POST'])]
+    public function edit(Request $request, Emprunt $emprunt, EntityManagerInterface $entityManager): Response
+    {
+        $form = $this->createForm(EmpruntType::class, $emprunt);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->flush();
+
+            return $this->redirectToRoute('app_emprunt_index', [], Response::HTTP_SEE_OTHER);
+        }
+
+        return $this->render('emprunt/edit.html.twig', [
+            'emprunt' => $emprunt,
+            'form' => $form,
+        ]);
+    }
+
+    #[Route('/{id}', name: 'app_emprunt_delete', methods: ['POST'])]
+    public function delete(Request $request, Emprunt $emprunt, EntityManagerInterface $entityManager): Response
+    {
+        if ($this->isCsrfTokenValid('delete'.$emprunt->getId(), $request->getPayload()->getString('_token'))) {
+            $entityManager->remove($emprunt);
+            $entityManager->flush();
+        }
+
+        return $this->redirectToRoute('app_emprunt_index', [], Response::HTTP_SEE_OTHER);
     }
 }

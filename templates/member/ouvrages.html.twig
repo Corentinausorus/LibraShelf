@@ -38,14 +38,12 @@
 
                         {# --- OPTIMISATION --- #}
                         {# On vérifie simplement si l'ID est dans le tableau pré-calculé #}
-                        {% if ouvrage.id in reservedOuvrageIds %}
-                            
+                        {% if ouvrage.id in (reservedOuvrageIds|default([])) %}
                             <div class="alert alert-info py-2 mt-2">
                                 <i class="bi bi-info-circle"></i> Vous avez déjà réservé cet ouvrage.
                                 <br>
                                 <a href="{{ path('member_reservations') }}" class="alert-link small">Voir mes réservations</a>
                             </div>
-
                         {% else %}
                             {# ... Affichage des boutons Réserver ... #}
                             {% set disponibles = ouvrage.exemplaires|filter(e => e.disponible) %}
