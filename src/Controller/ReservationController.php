@@ -72,12 +72,31 @@ final class ReservationController extends AbstractController
     #[Route('/{id}', name: 'app_reservation_delete', methods: ['POST'])]
     public function delete(Request $request, Reservation $reservation, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$reservation->getId(), $request->getPayload()->getString('_token'))) {
-            $entityManager->remove($reservation);
-            $entityManager->flush();
+        // CSRF check (form must submit _token)
+        if (!$this->isCsrfTokenValid('delete'.$reservation->getId(), $request->request->get('_token'))) {
+            $this->addFlash('error', 'Requête invalide.');
+            return $this->redirectToRoute('member_reservations');
         }
 
-        return $this->redirectToRoute('member_reservations', [], Response::HTTP_SEE_OTHER);
+        // ensure the reservation belongs to the current user
+        if ($reservation->getUser() !== $this->getUser()) {
+            $this->addFlash('error', 'Accès refusé.');
+            return $this->redirectToRoute('member_reservations');
+        }
+
+        // if an exemplaire was reserved, mark it available again
+        $ex = $reservation->getExemplaire();
+        if ($ex !== null) {
+            $ex->setDisponible(true);
+            $entityManager->persist($ex);
+        }
+
+        // remove the reservation
+        $entityManager->remove($reservation);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Réservation annulée. L\'exemplaire est de nouveau disponible.');
+        return $this->redirectToRoute('member_reservations');
     }
 
     #[Route('/add/{id}', name: 'app_reservation_add', methods: ['GET'])]

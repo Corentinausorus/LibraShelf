@@ -150,4 +150,29 @@ final class MemberController extends AbstractController
             'reservedOuvrageIds' => $reservedOuvrageIds,
         ]);
     }
+
+    #[Route('/reservation/{id}/cancel', name: 'member_reservation_cancel')]
+    #[IsGranted('ROLE_MEMBER')]
+    public function cancelReservation(Reservation $reservation, EntityManagerInterface $em): Response
+    {
+        // ensure the reservation belongs to the current user
+        if ($reservation->getUser() !== $this->getUser()) {
+            $this->addFlash('error', 'Accès refusé.');
+            return $this->redirectToRoute('member_reservations');
+        }
+
+        // if an exemplaire was reserved, mark it available again
+        $ex = $reservation->getExemplaire();
+        if ($ex !== null) {
+            $ex->setDisponible(true);
+            $em->persist($ex);
+        }
+
+        // remove the reservation (or update statut / active flag if you prefer)
+        $em->remove($reservation);
+        $em->flush();
+
+        $this->addFlash('success', 'Réservation annulée. L\'exemplaire est de nouveau disponible.');
+        return $this->redirectToRoute('member_reservations');
+    }
 }
