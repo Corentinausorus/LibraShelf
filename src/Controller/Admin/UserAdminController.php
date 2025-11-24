@@ -15,20 +15,27 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_ADMIN')]
 class UserAdminController extends AbstractController
 {
-    #[Route('', name: 'admin_user_index')]
+    #[Route('/users', name: 'admin_users')]
     public function index(UserRepository $repo): Response
     {
         $users = $repo->findAll();
         return $this->render('admin/index.html.twig', ['users' => $users]);
     }
 
-    #[Route('/{id}/edit-role', name: 'admin_user_edit_role')]
+    #[Route('', name: 'admin_dashboard')]
+    public function dashboard(): Response
+    {
+        return $this->render('admin/dashboard.html.twig');
+    }
+
+    #[Route('/users/{id}/edit-role', name: 'admin_user_edit_role')]
     public function editRole(Request $request, User $user, EntityManagerInterface $em, UserRepository $repo): Response
     {
         // Ne pas permettre à un admin de modifier son propre rôle depuis cette interface
-        if ($this->getUser()->getId() === $user->getId()) {
+        $currentUser = $this->getUser();
+        if ($currentUser instanceof User && $currentUser->getId() === $user->getId()) {
             $this->addFlash('warning', 'Vous ne pouvez pas changer votre propre rôle ici.');
-            return $this->redirectToRoute('admin_user_index');
+            return $this->redirectToRoute('admin_users');
         }
 
         $form = $this->createForm(UserRoleType::class, $user);
@@ -42,7 +49,7 @@ class UserAdminController extends AbstractController
                 $adminCount = $repo->countByRole('ROLE_ADMIN');
                 if ($adminCount <= 1) {
                     $this->addFlash('danger', 'Impossible de supprimer le dernier administrateur.');
-                    return $this->redirectToRoute('admin_user_index');
+                    return $this->redirectToRoute('admin_users');
                 }
             }
 
@@ -51,7 +58,7 @@ class UserAdminController extends AbstractController
             $em->flush();
 
             $this->addFlash('success', 'Rôle mis à jour avec succès.');
-            return $this->redirectToRoute('admin_user_index');
+            return $this->redirectToRoute('admin_users');
         }
 
         return $this->render('admin/edit_role.html.twig', [
