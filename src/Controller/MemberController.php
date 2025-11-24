@@ -10,7 +10,7 @@ use App\Repository\ReservationRepository;
 use App\Entity\Exemplaires;
 use App\Entity\Reservation;
 use Doctrine\ORM\EntityManagerInterface;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 final class MemberController extends AbstractController
 {
@@ -23,31 +23,11 @@ final class MemberController extends AbstractController
 
     #[Route('/member/ouvrages', name: 'member_ouvrages')]
     #[IsGranted('ROLE_MEMBER')]
-    public function Ouvrages(OuvrageRepository $ouvrageRepository, ReservationRepository $reservationRepository): Response
+    public function Ouvrages(OuvrageRepository $ouvrageRepository): Response
     {
-        $user = $this->getUser();
-        $ouvrages = $ouvrageRepository->findAll();
-
-        // OPTIMISATION : Récupérer tous les IDs des ouvrages réservés en UNE SEULE requête
-        $reservedOuvrageIds = [];
-        if ($user) {
-            // On utilise le QueryBuilder pour ne récupérer que les IDs, c'est ultra-rapide
-            $reservations = $reservationRepository->createQueryBuilder('r')
-                ->select('IDENTITY(r.ouvrage) as ouvrage_id') // On ne prend que l'ID
-                ->where('r.user = :user')
-                ->andWhere('r.statut IN (:statuts)')
-                ->setParameter('user', $user)
-                ->setParameter('statuts', ['En attente', 'À récupérer'])
-                ->getQuery()
-                ->getResult();
-
-            // On transforme le résultat en un tableau simple d'IDs [12, 45, 89]
-            $reservedOuvrageIds = array_column($reservations, 'ouvrage_id');
-        }
-
+        // Liste des livres disponibles
         return $this->render('member/ouvrages.html.twig', [
-            'ouvrages' => $ouvrages,
-            'reservedOuvrageIds' => $reservedOuvrageIds, // On passe le tableau léger
+            'ouvrages' => $ouvrageRepository->findAll(),
         ]);
     }
 
@@ -63,20 +43,9 @@ final class MemberController extends AbstractController
     #[IsGranted('ROLE_MEMBER')]
     public function myReservations(ReservationRepository $reservationRepository): Response
     {
-        $user = $this->getUser();
-
-        if (!$user) {
-            return $this->redirectToRoute('app_login');
-        }
-
-        // On récupère les réservations de l'utilisateur, triées par date (plus récentes en haut)
-        $reservations = $reservationRepository->findBy(
-            ['user' => $user],
-            ['creationDate' => 'DESC']
-        );
-
-        return $this->render('member/reservations.html.twig', [
-            'reservations' => $reservations,
+        // Mes réservations
+        return $this->render('member/reservations.html.twig',[
+            'reservations' => $reservationRepository->findBy(['user' => $this->getUser()]),
         ]);
     }
 
@@ -90,13 +59,10 @@ final class MemberController extends AbstractController
         }
 
         $reservation = new Reservation();
-        $reservation->setCreationDate(new \DateTimeImmutable());
+        $reservation->setCreationDate(new \DateTime());
         $reservation->setUser($this->getUser());
 
-        $reservation->setExemplaire($exemplaire);
-        // CORRECTION : On doit définir l'ouvrage lié à cet exemplaire
-        $reservation->setOuvrage($exemplaire->getOuvrage());
-        $reservation->setStatut('À récupérer'); // On définit un statut par défaut
+        $reservation->addExemplaire($exemplaire);
 
         $exemplaire->setDisponible(false);
 
@@ -119,44 +85,32 @@ final class MemberController extends AbstractController
             return $this->redirectToRoute('member_ouvrages');
         }
 
-        // --- CORRECTION DEBUT : Vérification plus fine ---
-        // On récupère toutes les réservations de l'utilisateur pour ce livre
-        $existingReservations = $reservationRepo->findBy([
+        // Vérifie s'il y a déjà une réservation pour ce membre
+        $existing = $reservationRepo->findOneBy([
             'user' => $this->getUser(),
-            'ouvrage' => $ouvrage
+            // On peut ajouter filtrage sur ouvrage ou exemplaires
         ]);
 
-        // On regarde s'il y en a une qui est encore active
-        foreach ($existingReservations as $res) {
-            if (in_array($res->getStatut(), ['En attente', 'À récupérer'])) {
-                $this->addFlash('info', 'Vous avez déjà une réservation en cours pour cet ouvrage.');
-                return $this->redirectToRoute('member_reservations');
-            }
+        if ($existing) {
+            $this->addFlash('info', 'Vous avez déjà une réservation pour cet ouvrage.');
+            return $this->redirectToRoute('member_reservations');
         }
-        // --- CORRECTION FIN ---
 
         $reservation = new Reservation();
         $reservation->setCreationDate(new \DateTimeImmutable());
         $reservation->setUser($this->getUser());
-        $reservation->setOuvrage($ouvrage);
 
         // Optionnel : lier un exemplaire disponible immédiatement
         $disponible = $ouvrage->getExemplaires()->filter(fn($ex) => $ex->isDisponible());
-        
         if (!$disponible->isEmpty()) {
-            $reservation->setExemplaire($disponible->first());
+            $reservation->addExemplaire($disponible->first());
             $disponible->first()->setDisponible(false);
-            $reservation->setStatut('À récupérer');
-            $this->addFlash('success', 'Exemplaire disponible ! Vous pouvez venir le chercher.');
-        } else {
-            $reservation->setStatut('En attente');
-            // Important : s'assurer que l'exemplaire est bien null
-            $reservation->setExemplaire(null); 
-            $this->addFlash('success', 'Vous avez été ajouté à la file d\'attente.');
         }
 
         $em->persist($reservation);
         $em->flush();
+
+        $this->addFlash('success', 'Votre réservation a bien été enregistrée !');
 
         return $this->redirectToRoute('member_reservations');
     }
