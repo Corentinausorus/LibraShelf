@@ -77,7 +77,7 @@ final class ReservationController extends AbstractController
             $entityManager->flush();
         }
 
-        return $this->redirectToRoute('app_reservation_index', [], Response::HTTP_SEE_OTHER);
+        return $this->redirectToRoute('member_reservations', [], Response::HTTP_SEE_OTHER);
     }
 
     #[Route('/add/{id}', name: 'app_reservation_add', methods: ['GET'])]
@@ -86,10 +86,6 @@ final class ReservationController extends AbstractController
         $user = $this->getUser();
         if (!$user) return $this->redirectToRoute('app_login');
 
-        // Règle métier : Pas de doublon
-        // (À implémenter : vérifier si user a déjà une résa active sur cet ouvrage)
-
-        // 1. Chercher un exemplaire DISPONIBLE
         $exemplaireDispo = null;
         foreach ($ouvrage->getExemplaires() as $ex) {
             if ($ex->isDisponible()) {
@@ -104,22 +100,16 @@ final class ReservationController extends AbstractController
         $reservation->setCreationDate(new \DateTimeImmutable());
 
         if ($exemplaireDispo) {
-            // SCÉNARIO 1 : CLICK & COLLECT
-            // On bloque l'exemplaire pour ce membre
             $reservation->setExemplaire($exemplaireDispo);
-            $reservation->setStatut('À récupérer'); // Statut clair
+            $reservation->setStatut('À récupérer'); 
             
-            $exemplaireDispo->setDisponible(false); // L'exemplaire n'est plus dispo pour les autres
+            $exemplaireDispo->setDisponible(false); 
             
             $this->addFlash('success', 'Livre mis de côté ! Vous avez 48h pour venir le chercher.');
         } else {
-            // SCÉNARIO 2 : FILE D'ATTENTE
-            $reservation->setExemplaire(null); // Pas d'exemplaire attribué
+            $reservation->setExemplaire(null); 
             $reservation->setStatut('En attente');
-            
-            // Calcul de la position dans la file (Bonus UX)
-            // $position = ... count reservations where ouvrage = id and statut = 'En attente'
-            
+
             $this->addFlash('info', 'Aucun exemplaire disponible. Vous avez rejoint la file d\'attente.');
         }
 
