@@ -62,7 +62,13 @@ final class MemberController extends AbstractController
         $reservation->setCreationDate(new \DateTimeImmutable());
         $reservation->setUser($this->getUser());
 
+        // required non-nullable column
+        $reservation->setStatut('A venir chercher'); 
+
         $reservation->setExemplaire($exemplaire);
+
+        // ensure the required ouvrage relation is set
+        $reservation->setOuvrage($exemplaire->getOuvrage());
 
         $exemplaire->setDisponible(false);
 
@@ -100,6 +106,12 @@ final class MemberController extends AbstractController
         $reservation->setCreationDate(new \DateTimeImmutable());
         $reservation->setUser($this->getUser());
 
+        // required non-nullable column
+        $reservation->setStatut('Réserfé'); // <-- adapt to your allowed values
+
+        // set the ouvrage to satisfy NOT NULL constraint
+        $reservation->setOuvrage($ouvrage);
+
         // Optionnel : lier un exemplaire disponible immédiatement
         $disponible = $ouvrage->getExemplaires()->filter(fn($ex) => $ex->isDisponible());
         if (!$disponible->isEmpty()) {
@@ -115,4 +127,52 @@ final class MemberController extends AbstractController
         return $this->redirectToRoute('member_reservations');
     }
 
+    #[Route('/member/ouvrages/{id}', name: 'member_ouvrage_detail')]
+    #[IsGranted('ROLE_MEMBER')]
+    public function ouvrageDetail(int $id, OuvrageRepository $ouvrageRepo, ReservationRepository $reservationRepo): Response
+    {
+        $ouvrage = $ouvrageRepo->find($id);
+        if (!$ouvrage) {
+            $this->addFlash('error', 'Ouvrage introuvable.');
+            return $this->redirectToRoute('member_ouvrages');
+        }
+
+        $user = $this->getUser();
+        $reservations = $user ? $reservationRepo->findBy(['user' => $user, 'active' => true]) : [];
+
+        // map reservations to ouvrage IDs (adjust accessors to your model)
+        $reservedOuvrageIds = array_map(function($r) {
+            return $r->getExemplaire()->getOuvrage()->getId();
+        }, $reservations);
+
+        return $this->render('member/ouvrage_detail.html.twig', [
+            'ouvrage' => $ouvrage,
+            'reservedOuvrageIds' => $reservedOuvrageIds,
+        ]);
+    }
+
+    #[Route('/reservation/{id}/cancel', name: 'member_reservation_cancel')]
+    #[IsGranted('ROLE_MEMBER')]
+    public function cancelReservation(Reservation $reservation, EntityManagerInterface $em): Response
+    {
+        // ensure the reservation belongs to the current user
+        if ($reservation->getUser() !== $this->getUser()) {
+            $this->addFlash('error', 'Accès refusé.');
+            return $this->redirectToRoute('member_reservations');
+        }
+
+        // if an exemplaire was reserved, mark it available again
+        $ex = $reservation->getExemplaire();
+        if ($ex !== null) {
+            $ex->setDisponible(true);
+            $em->persist($ex);
+        }
+
+        // remove the reservation (or update statut / active flag if you prefer)
+        $em->remove($reservation);
+        $em->flush();
+
+        $this->addFlash('success', 'Réservation annulée. L\'exemplaire est de nouveau disponible.');
+        return $this->redirectToRoute('member_reservations');
+    }
 }
