@@ -36,27 +36,42 @@
 
                         <h6>Exemplaires disponibles :</h6>
 
-                        {% set disponibles = ouvrage.exemplaires|filter(e => e.disponible) %}
+                        {# --- OPTIMISATION --- #}
+                        {# On vérifie simplement si l'ID est dans le tableau pré-calculé #}
+                        {% if ouvrage.id in reservedOuvrageIds %}
+                            
+                            <div class="alert alert-info py-2 mt-2">
+                                <i class="bi bi-info-circle"></i> Vous avez déjà réservé cet ouvrage.
+                                <br>
+                                <a href="{{ path('member_reservations') }}" class="alert-link small">Voir mes réservations</a>
+                            </div>
 
-                        {% if disponibles is empty %}
-                            <span class="badge bg-danger">Aucun disponible</span>
-                            <a href="{{ path('member_reserve_ouvrage', { id: ouvrage.id }) }}"
+                        {% else %}
+                            {# ... Affichage des boutons Réserver ... #}
+                            {% set disponibles = ouvrage.exemplaires|filter(e => e.disponible) %}
+                            
+                            {# ... vos boutons Réserver ... #}
+                            {% if disponibles is empty %}
+                                <span class="badge bg-danger">Aucun disponible</span>
+                                <a href="{{ path('member_reserve_ouvrage', { id: ouvrage.id }) }}"
                             class="btn btn-warning btn-sm mt-2">
                             Réserver
                             </a>
-                        {% else %}
-                            <ul class="list-group mt-2">
-                                {% for ex in disponibles %}
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        Cote : {{ ex.cote }}
+                            {% else %}
+                                <ul class="list-group mt-2">
+                                    {% for ex in disponibles %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            Cote : {{ ex.cote }}
 
-                                        <a href="{{ path('member_reserve_exemplaire', { id: ex.id }) }}"
-                                           class="btn btn-primary btn-sm">
+                                            <a href="{{ path('member_reserve_exemplaire', { id: ex.id }) }}"
+                                               class="btn btn-primary btn-sm">
                                             Réserver
                                         </a>
                                     </li>
-                                {% endfor %}
-                            </ul>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+
                         {% endif %}
                     </div>
                 </div>

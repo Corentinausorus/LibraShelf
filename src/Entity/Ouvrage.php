@@ -68,7 +68,8 @@ class Ouvrage
         $this->auteurs = new ArrayCollection();
         $this->exemplaires = new ArrayCollection();
         $this->categories = new ArrayCollection();
-        $this->tags = new ArrayCollection();    }
+        $this->tags = new ArrayCollection();
+        $this->reservations = new ArrayCollection();    }
 
     public function getId(): ?int
     {
@@ -135,6 +136,12 @@ class Ouvrage
     }
     #[ORM\ManyToOne(inversedBy: 'ouvrages')]
     private ?User $createdBy = null;
+
+    /**
+     * @var Collection<int, Reservation>
+     */
+    #[ORM\OneToMany(targetEntity: Reservation::class, mappedBy: 'ouvrage')]
+    private Collection $reservations;
 
     public function getCreatedBy(): ?User
     {
@@ -263,6 +270,36 @@ class Ouvrage
     {
         if ($this->tags->removeElement($tag)) {
             $tag->removeOuvrage($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Reservation>
+     */
+    public function getReservations(): Collection
+    {
+        return $this->reservations;
+    }
+
+    public function addReservation(Reservation $reservation): static
+    {
+        if (!$this->reservations->contains($reservation)) {
+            $this->reservations->add($reservation);
+            $reservation->setOuvrage($this);
+        }
+
+        return $this;
+    }
+
+    public function removeReservation(Reservation $reservation): static
+    {
+        if ($this->reservations->removeElement($reservation)) {
+            // set the owning side to null (unless already changed)
+            if ($reservation->getOuvrage() === $this) {
+                $reservation->setOuvrage(null);
+            }
         }
 
         return $this;

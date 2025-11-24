@@ -15,7 +15,7 @@ class Exemplaires
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 4)]
+    #[ORM\Column(length: 10)]
     private ?string $cote = null;
 
     #[ORM\Column(length: 40)]

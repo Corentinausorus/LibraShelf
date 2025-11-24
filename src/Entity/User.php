@@ -34,7 +34,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Emprunt::class, mappedBy: 'User')]
     private Collection $emprunts;
 
-    #[ORM\OneToMany(targetEntity: Reservation::class, mappedBy: 'User')]
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Reservation::class)]
     private Collection $reservations;
 
     #[ORM\OneToMany(targetEntity: Penalites::class, mappedBy: 'user')]
@@ -127,5 +127,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    // ... getters/setters pour emprunts, reservations, penalites ...
+    
+
+    /**
+     * @return Collection<int, Reservation>
+     */
+    public function getReservations(): Collection
+    {
+        return $this->reservations;
+    }
 }

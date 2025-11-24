@@ -3,13 +3,9 @@
 namespace App\Entity;
 
 use App\Repository\ReservationRepository;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\UX\Turbo\Attribute\Broadcast;
 
 #[ORM\Entity(repositoryClass: ReservationRepository::class)]
-//#[Broadcast]
 class Reservation
 {
     #[ORM\Id]
@@ -20,19 +16,19 @@ class Reservation
     #[ORM\Column]
     private ?\DateTimeImmutable $creationDate = null;
 
-    /**
-     * @var Collection<int, Exemplaires>
-     */
-    #[ORM\OneToMany(targetEntity: Exemplaires::class, mappedBy: 'reservation')]
-    private Collection $exemplaires;
+    #[ORM\ManyToOne(targetEntity: Exemplaires::class)]
+    #[ORM\JoinColumn(nullable: true)] // Nullable car on peut être en file d'attente (pas d'exemplaire attribué)
+    private ?Exemplaires $exemplaire = null;
 
     #[ORM\ManyToOne(inversedBy: 'reservations')]
     private ?User $user = null;
 
-    public function __construct()
-    {
-        $this->Exemplaire = new ArrayCollection();
-    }
+    #[ORM\ManyToOne(inversedBy: 'reservations')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Ouvrage $ouvrage = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $statut = null;
 
     public function getId(): ?int
     {
@@ -51,32 +47,14 @@ class Reservation
         return $this;
     }
 
-    /**
-     * @return Collection<int, Exemplaires>
-     */
-    public function getExemplaires(): Collection
+    public function getExemplaire(): ?Exemplaires
     {
-        return $this->exemplaires;
+        return $this->exemplaire;
     }
 
-    public function addExemplaires(Exemplaires $exemplaires): static
+    public function setExemplaire(?Exemplaires $exemplaire): static
     {
-        if (!$this->exemplaires->contains($exemplaires)) {
-            $this->exemplaires->add($exemplaires);
-            $exemplaires->setReservation($this);
-        }
-
-        return $this;
-    }
-
-    public function removeExemplaire(Exemplaires $exemplaire): static
-    {
-        if ($this->Exemplaire->removeElement($exemplaire)) {
-            // set the owning side to null (unless already changed)
-            if ($exemplaire->getReservation() === $this) {
-                $exemplaire->setReservation(null);
-            }
-        }
+        $this->exemplaire = $exemplaire;
 
         return $this;
     }
@@ -93,4 +71,27 @@ class Reservation
         return $this;
     }
 
+    public function getOuvrage(): ?Ouvrage
+    {
+        return $this->ouvrage;
+    }
+
+    public function setOuvrage(?Ouvrage $ouvrage): static
+    {
+        $this->ouvrage = $ouvrage;
+
+        return $this;
+    }
+
+    public function getStatut(): ?string
+    {
+        return $this->statut;
+    }
+
+    public function setStatut(string $statut): static
+    {
+        $this->statut = $statut;
+
+        return $this;
+    }
 }

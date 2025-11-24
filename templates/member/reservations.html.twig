@@ -1,38 +1,101 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Mes réservations{% endblock %}
+{% block title %}Mes Réservations{% endblock %}
 
 {% block body %}
 <div class="container mt-4">
-    <h1 class="mb-4">Mes réservations</h1>
+    <h1 class="mb-4">Mes Réservations</h1>
+
+    {# Gestion des messages flash (succès/info) #}
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endfor %}
 
     {% if reservations is empty %}
-        <div class="alert alert-info">
-            Vous n'avez effectué aucune réservation pour le moment.
+        <div class="alert alert-info shadow-sm">
+            <h4 class="alert-heading">Aucune réservation</h4>
+            <p>Vous n'avez aucune réservation en cours pour le moment.</p>
+            <hr>
+            <p class="mb-0">
+                <a href="{{ path('member_ouvrages') }}" class="btn btn-primary">Parcourir le catalogue</a>
+            </p>
         </div>
     {% else %}
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Exemplaires réservés</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for res in reservations %}
-                    <tr>
-                        <td>{{ res.creationDate|date('d/m/Y H:i') }}</td>
-                        <td>
-                            {% for ex in res.exemplaires %}
-                                <span class="badge bg-primary">
-                                    {{ ex.ouvrage.titre }} - ({{ ex.cote }})
-                                </span>
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col" class="ps-4">Livre</th>
+                                <th scope="col">Date de demande</th>
+                                <th scope="col">État</th>
+                                <th scope="col">Détails</th>
+                                <th scope="col" class="text-end pe-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for reservation in reservations %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="fw-bold">{{ reservation.ouvrage.titre }}</div>
+                                        <small class="text-muted">
+                                            {% for auteur in reservation.ouvrage.auteurs %}
+                                               {#} {{ auteur.nom }} {{ auteur.prenom }}{% if not loop.last %}, {% endif %}#}
+                                            {% endfor %}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        {{ reservation.creationDate|date('d/m/Y') }}
+                                        <br>
+                                        <small class="text-muted">{{ reservation.creationDate|date('H:i') }}</small>
+                                    </td>
+                                    <td>
+                                        {% if reservation.statut == 'À récupérer' %}
+                                            <span class="badge bg-success rounded-pill">
+                                                <i class="bi bi-check-circle me-1"></i> Prêt à récupérer
+                                            </span>
+                                        {% elseif reservation.statut == 'En attente' %}
+                                            <span class="badge bg-warning text-dark rounded-pill">
+                                                <i class="bi bi-hourglass-split me-1"></i> File d'attente
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary rounded-pill">{{ reservation.statut }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if reservation.exemplaire %}
+                                            {# Cas où un exemplaire est attribué #}
+                                            <div class="d-flex flex-column">
+                                                <span class="text-success fw-bold">Disponible</span>
+                                                <small>Cote : <span class="badge bg-light text-dark border">{{ reservation.exemplaire.cote }}</span></small>
+                                            </div>
+                                        {% else %}
+                                            {# Cas file d'attente #}
+                                            <span class="text-muted fst-italic">En attente de retour</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        {# Bouton d'annulation (Logique à implémenter plus tard) #}
+                                        <form method="post" action="{{ path('app_reservation_delete', {'id': reservation.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir annuler cette réservation ?');">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ reservation.id) }}">
+                                            <button class="btn btn-outline-danger btn-sm">
+                                                Annuler
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
                             {% endfor %}
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     {% endif %}
 </div>
 {% endblock %}
