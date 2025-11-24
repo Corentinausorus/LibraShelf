@@ -59,10 +59,10 @@ final class MemberController extends AbstractController
         }
 
         $reservation = new Reservation();
-        $reservation->setCreationDate(new \DateTime());
+        $reservation->setCreationDate(new \DateTimeImmutable());
         $reservation->setUser($this->getUser());
 
-        $reservation->addExemplaire($exemplaire);
+        $reservation->setExemplaire($exemplaire);
 
         $exemplaire->setDisponible(false);
 
@@ -103,7 +103,7 @@ final class MemberController extends AbstractController
         // Optionnel : lier un exemplaire disponible immédiatement
         $disponible = $ouvrage->getExemplaires()->filter(fn($ex) => $ex->isDisponible());
         if (!$disponible->isEmpty()) {
-            $reservation->addExemplaire($disponible->first());
+            $reservation->setExemplaire($disponible->first());
             $disponible->first()->setDisponible(false);
         }
 
