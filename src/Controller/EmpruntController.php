@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Service\ServiceReglesEmprunt;
 use App\Entity\Emprunt;
 use App\Form\EmpruntType;
 use App\Repository\EmpruntRepository;
@@ -28,6 +29,7 @@ final class EmpruntController extends AbstractController
         $emprunt = new Emprunt();
         $form = $this->createForm(EmpruntType::class, $emprunt);
         $form->handleRequest($request);
+        $Ser->applyDefaultDueDateIfMissing($emprunt);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->persist($emprunt);
