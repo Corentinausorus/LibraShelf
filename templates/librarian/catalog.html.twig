@@ -1,0 +1,40 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Catalogue - Bibliothécaire{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+    <h1 class="h4 mb-4"><i class="bi bi-journal-bookmark"></i> Gestion du Catalogue</h1>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-book"></i> Ouvrages</h5>
+                    <p class="card-text">Gérer les ouvrages du catalogue : ajouter, modifier, supprimer.</p>
+                    <a href="{{ path('librarian_ouvrages') }}" class="btn btn-primary">
+                        <i class="bi bi-arrow-right"></i> Accéder aux ouvrages
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-copy"></i> Exemplaires</h5>
+                    <p class="card-text">Gérer les exemplaires physiques des ouvrages.</p>
+                    <a href="{{ path('librarian_exemplaires') }}" class="btn btn-primary">
+                        <i class="bi bi-arrow-right"></i> Accéder aux exemplaires
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{{ path('librarian_dashboard') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Retour au tableau de bord
+        </a>
+    </div>
+</div>
+{% endblock %}

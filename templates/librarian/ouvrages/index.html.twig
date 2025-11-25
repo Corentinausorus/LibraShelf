@@ -75,6 +75,10 @@
                                     </td>
                                     <td class="text-end">
                                         <div class="btn-group btn-group-sm">
+                                            <a href="{{ path('librarian_ouvrage_exemplaires', {id: ouvrage.id}) }}" 
+                                               class="btn btn-outline-success" title="Gérer les exemplaires">
+                                                <i class="bi bi-copy"></i>
+                                            </a>
                                             <a href="{{ path('librarian_ouvrage_edit', {id: ouvrage.id}) }}" 
                                                class="btn btn-outline-primary" title="Modifier">
                                                 <i class="bi bi-pencil"></i>

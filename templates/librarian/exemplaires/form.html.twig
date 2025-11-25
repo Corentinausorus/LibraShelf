@@ -1,0 +1,121 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ isEdit ? 'Modifier' : 'Créer' }} un exemplaire - Libraire{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h1 class="h4 mb-4">
+                <i class="bi bi-collection"></i> 
+                {% if isEdit %}
+                    Modifier l'exemplaire : {{ exemplaire.cote }}
+                {% else %}
+                    Créer un nouvel exemplaire
+                {% endif %}
+            </h1>
+
+            {% if exemplaire.ouvrage %}
+                <nav aria-label="breadcrumb" class="mb-3">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{{ path('librarian_ouvrages') }}">Ouvrages</a></li>
+                        <li class="breadcrumb-item">
+                            <a href="{{ path('librarian_ouvrage_exemplaires', {id: exemplaire.ouvrage.id}) }}">
+                                {{ exemplaire.ouvrage.titre }}
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item active">{{ isEdit ? 'Modifier' : 'Nouvel exemplaire' }}</li>
+                    </ol>
+                </nav>
+            {% endif %}
+
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ label }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <i class="bi bi-pencil-square"></i> Informations de l'exemplaire
+                </div>
+                <div class="card-body">
+                    {{ form_start(form) }}
+                        
+                        {# Ouvrage associé #}
+                        <div class="mb-3">
+                            {{ form_row(form.ouvrage) }}
+                        </div>
+
+                        <div class="row">
+                            {# Cote - identifiant unique #}
+                            <div class="col-md-6 mb-3">
+                                {{ form_row(form.cote) }}
+                            </div>
+                            
+                            {# État physique #}
+                            <div class="col-md-6 mb-3">
+                                {{ form_row(form.etat) }}
+                            </div>
+                        </div>
+
+                        {# Disponibilité #}
+                        <div class="mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <div class="form-check form-switch">
+                                        {{ form_widget(form.disponible, {'attr': {'class': 'form-check-input'}}) }}
+                                        {{ form_label(form.disponible, null, {'label_attr': {'class': 'form-check-label'}}) }}
+                                    </div>
+                                    <small class="text-muted">
+                                        <i class="bi bi-info-circle"></i>
+                                        Un exemplaire indisponible ne peut pas être emprunté par les membres.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                            {% if exemplaire.ouvrage %}
+                                <a href="{{ path('librarian_ouvrage_exemplaires', {id: exemplaire.ouvrage.id}) }}" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle"></i> Annuler
+                                </a>
+                            {% else %}
+                                <a href="{{ path('librarian_exemplaires') }}" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle"></i> Annuler
+                                </a>
+                            {% endif %}
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> {{ isEdit ? 'Enregistrer les modifications' : 'Créer l\'exemplaire' }}
+                            </button>
+                        </div>
+
+                    {{ form_end(form) }}
+                </div>
+            </div>
+
+            {% if isEdit %}
+                <div class="card mt-3 border-info">
+                    <div class="card-header bg-info text-white">
+                        <i class="bi bi-info-circle"></i> Informations
+                    </div>
+                    <div class="card-body">
+                        <ul class="mb-0">
+                            <li><strong>ID :</strong> {{ exemplaire.id }}</li>
+                            {% if exemplaire.emprunt %}
+                                <li><strong>Emprunt en cours :</strong> Oui (depuis le {{ exemplaire.emprunt.dateEmprunt|date('d/m/Y') }})</li>
+                            {% endif %}
+                            {% if exemplaire.reservation %}
+                                <li><strong>Réservation :</strong> {{ exemplaire.reservation.user.email }}</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
