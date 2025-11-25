@@ -2,8 +2,11 @@
 
 namespace App\Controller;
 
+use App\Entity\Exemplaires;
 use App\Entity\Ouvrage;
+use App\Form\ExemplaireType;
 use App\Form\OuvrageType;
+use App\Repository\ExemplairesRepository;
 use App\Repository\OuvrageRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -135,5 +138,113 @@ final class LibrarianController extends AbstractController
         }
 
         return $this->redirectToRoute('librarian_ouvrages');
+    }
+
+    // ==================== GESTION DES EXEMPLAIRES ====================
+
+    #[Route('/librarian/exemplaires', name: 'librarian_exemplaires')]
+    #[IsGranted('ROLE_LIBRARIAN')]
+    public function listExemplaires(ExemplairesRepository $exemplairesRepository): Response
+    {
+        return $this->render('librarian/exemplaires/index.html.twig', [
+            'exemplaires' => $exemplairesRepository->findAll(),
+            'ouvrage' => null,
+        ]);
+    }
+
+    #[Route('/librarian/ouvrage/{id}/exemplaires', name: 'librarian_ouvrage_exemplaires')]
+    #[IsGranted('ROLE_LIBRARIAN')]
+    public function listExemplairesOuvrage(Ouvrage $ouvrage): Response
+    {
+        return $this->render('librarian/exemplaires/index.html.twig', [
+            'exemplaires' => $ouvrage->getExemplaires(),
+            'ouvrage' => $ouvrage,
+        ]);
+    }
+
+    #[Route('/librarian/exemplaire/new/{ouvrageId?}', name: 'librarian_exemplaire_new')]
+    #[IsGranted('ROLE_LIBRARIAN')]
+    public function createExemplaire(Request $request, EntityManagerInterface $em, OuvrageRepository $ouvrageRepo, ?int $ouvrageId = null): Response
+    {
+        $exemplaire = new Exemplaires();
+        
+        // Si un ouvrage est spécifié dans l'URL, le pré-sélectionner
+        if ($ouvrageId) {
+            $ouvrage = $ouvrageRepo->find($ouvrageId);
+            if ($ouvrage) {
+                $exemplaire->setOuvrage($ouvrage);
+            }
+        }
+        
+        // Par défaut, l'exemplaire est disponible
+        $exemplaire->setDisponible(true);
+        
+        $form = $this->createForm(ExemplaireType::class, $exemplaire);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em->persist($exemplaire);
+            $em->flush();
+
+            $this->addFlash('success', 'L\'exemplaire a été créé avec succès.');
+            
+            // Rediriger vers la liste des exemplaires de l'ouvrage si on en a un
+            if ($exemplaire->getOuvrage()) {
+                return $this->redirectToRoute('librarian_ouvrage_exemplaires', ['id' => $exemplaire->getOuvrage()->getId()]);
+            }
+            return $this->redirectToRoute('librarian_exemplaires');
+        }
+
+        return $this->render('librarian/exemplaires/form.html.twig', [
+            'form' => $form->createView(),
+            'exemplaire' => $exemplaire,
+            'isEdit' => false,
+        ]);
+    }
+
+    #[Route('/librarian/exemplaire/{id}/edit', name: 'librarian_exemplaire_edit')]
+    #[IsGranted('ROLE_LIBRARIAN')]
+    public function editExemplaire(Request $request, Exemplaires $exemplaire, EntityManagerInterface $em): Response
+    {
+        $form = $this->createForm(ExemplaireType::class, $exemplaire);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em->flush();
+
+            $this->addFlash('success', 'L\'exemplaire a été modifié avec succès.');
+            
+            if ($exemplaire->getOuvrage()) {
+                return $this->redirectToRoute('librarian_ouvrage_exemplaires', ['id' => $exemplaire->getOuvrage()->getId()]);
+            }
+            return $this->redirectToRoute('librarian_exemplaires');
+        }
+
+        return $this->render('librarian/exemplaires/form.html.twig', [
+            'form' => $form->createView(),
+            'exemplaire' => $exemplaire,
+            'isEdit' => true,
+        ]);
+    }
+
+    #[Route('/librarian/exemplaire/{id}/delete', name: 'librarian_exemplaire_delete', methods: ['POST'])]
+    #[IsGranted('ROLE_LIBRARIAN')]
+    public function deleteExemplaire(Request $request, Exemplaires $exemplaire, EntityManagerInterface $em): Response
+    {
+        $ouvrageId = $exemplaire->getOuvrage()?->getId();
+        
+        if ($this->isCsrfTokenValid('delete'.$exemplaire->getId(), $request->request->get('_token'))) {
+            $em->remove($exemplaire);
+            $em->flush();
+
+            $this->addFlash('success', 'L\'exemplaire a été supprimé avec succès.');
+        } else {
+            $this->addFlash('danger', 'Token CSRF invalide.');
+        }
+
+        if ($ouvrageId) {
+            return $this->redirectToRoute('librarian_ouvrage_exemplaires', ['id' => $ouvrageId]);
+        }
+        return $this->redirectToRoute('librarian_exemplaires');
     }
 }
