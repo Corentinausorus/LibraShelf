@@ -22,10 +22,32 @@ class OuvrageFixtures extends Fixture implements DependentFixtureInterface
         // Récupérer un bibliothécaire comme créateur
         $librarian = $this->getReference(UserFixtures::LIBRARIAN_REFERENCE . '1', User::class);
 
-        for ($i = 0; $i < 20; $i++) {
+            // Nombre d'ouvrages à générer (réaliste)
+            $count = 500;
+
+            for ($i = 0; $i < $count; $i++) {
             $ouvrage = new Ouvrage();
             $ouvrage->setTitre($faker->sentence(3));
-            $ouvrage->setIsbn($faker->isbn13());
+                $ouvrage->setIsbn($faker->isbn13());
+                // Langues possibles
+                $possibleLangues = ['fr', 'en', 'de', 'es', 'it'];
+                $nbLangues = $faker->numberBetween(1, 2);
+                $langues = $faker->randomElements($possibleLangues, $nbLangues);
+                $ouvrage->setLangues($langues);
+
+                // Année de publication (DateTimeImmutable)
+                $year = $faker->numberBetween(1950, (int) date('Y'));
+                $ouvrage->setAnnee(new \DateTimeImmutable($year . '-01-01'));
+
+                // Résumé
+                $ouvrage->setResume($faker->paragraph(3));
+
+                // Editeur aléatoire si présent
+                $edIndex = $faker->numberBetween(0, 9);
+                if ($this->hasReference(EditeurFixtures::EDITEUR_REFERENCE . $edIndex, \App\Entity\Editeur::class)) {
+                    $editeur = $this->getReference(EditeurFixtures::EDITEUR_REFERENCE . $edIndex, \App\Entity\Editeur::class);
+                    $ouvrage->setEditeur($editeur);
+                }
             $ouvrage->setCreatedBy($librarian);
             
             $nbAuteurs = $faker->numberBetween(1, 3);
@@ -55,6 +77,7 @@ class OuvrageFixtures extends Fixture implements DependentFixtureInterface
         return [
             AuteurFixtures::class,
             CategorieFixtures::class,
+            EditeurFixtures::class,
             UserFixtures::class,
         ];
     }
