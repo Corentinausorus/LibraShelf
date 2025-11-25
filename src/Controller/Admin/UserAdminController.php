@@ -1,8 +1,11 @@
 <?php
 namespace App\Controller\Admin;
 
+use App\Entity\ParametreEmprunt;
 use App\Entity\User;
+use App\Form\TypeParametreEmprunt;
 use App\Form\UserRoleType;
+use App\Repository\ParametreEmpruntRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -66,4 +69,25 @@ class UserAdminController extends AbstractController
             'user' => $user,
         ]);
     }
+    #[Route('/settings/loan', name: 'admin_loan_settings')]
+public function loanSettings(Request $request, EntityManagerInterface $em, ParametreEmpruntRepository $settingsRepo): Response
+{
+    $settings = $settingsRepo->findOneBy([]) ?? new ParametreEmprunt();
+    $form = $this->createForm(TypeParametreEmprunt::class, $settings);
+    $form->handleRequest($request);
+
+    if ($form->isSubmitted() && $form->isValid()) {
+        $settings->setConfiguration(new \DateTimeImmutable());
+        $em->persist($settings);
+        $em->flush();
+
+        $this->addFlash('success', 'Paramètres de prêt enregistrés.');
+        return $this->redirectToRoute('admin_loan_settings');
+    }
+
+    return $this->render('admin/emprunt_parametre.html.twig', [
+        'form' => $form->createView(),
+        'settings' => $settings,
+    ]);
+}
 }
