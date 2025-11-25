@@ -10,6 +10,9 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class UserFixtures extends Fixture
 {
+    public const LIBRARIAN_REFERENCE = 'librarian_';
+    public const MEMBER_REFERENCE = 'member_';
+
     public function __construct(
         private UserPasswordHasherInterface $passwordHasher
     ) {
@@ -26,6 +29,7 @@ class UserFixtures extends Fixture
         $admin->setPassword($this->passwordHasher->hashPassword($admin, 'admin123'));
         $admin->setRole('ROLE_ADMIN');
         $manager->persist($admin);
+        $this->addReference('admin', $admin);
         
         // 3 Bibliothécaires
         for ($i = 1; $i <= 3; $i++) {
@@ -35,6 +39,7 @@ class UserFixtures extends Fixture
             $librarian->setPassword($this->passwordHasher->hashPassword($librarian, 'librarian123'));
             $librarian->setRole('ROLE_LIBRARIAN');
             $manager->persist($librarian);
+            $this->addReference(self::LIBRARIAN_REFERENCE . $i, $librarian);
         }
         
         // 50 Membres
@@ -45,10 +50,7 @@ class UserFixtures extends Fixture
             $member->setPassword($this->passwordHasher->hashPassword($member, 'member123'));
             $member->setRole('ROLE_MEMBER');
             $manager->persist($member);
-            
-            if ($i <= 10) {
-                $this->addReference('member_' . $i, $member);
-            }
+            $this->addReference(self::MEMBER_REFERENCE . $i, $member);
         }
         
         $manager->flush();
