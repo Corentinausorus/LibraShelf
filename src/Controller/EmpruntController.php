@@ -24,12 +24,12 @@ final class EmpruntController extends AbstractController
     }
 
     #[Route('/new', name: 'app_emprunt_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    public function new(Request $request, EntityManagerInterface $entityManager, ServiceReglesEmprunt $serviceRegles): Response
     {
         $emprunt = new Emprunt();
         $form = $this->createForm(EmpruntType::class, $emprunt);
         $form->handleRequest($request);
-        $Ser->applyDefaultDueDateIfMissing($emprunt);
+        $serviceRegles->applyDefaultDueDateIfMissing($emprunt);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->persist($emprunt);
