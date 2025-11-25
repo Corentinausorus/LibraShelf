@@ -81,8 +81,8 @@
                                     <td>{{ ouvrage.ISBN }}</td>
                                     <td>{{ ouvrage.editeur ? ouvrage.editeur.nom : '-' }}</td>
                                     <td>
-                                        {% if ouvrage.Année %}
-                                            {{ ouvrage.Année|date('Y') }}
+                                        {% if ouvrage.annee %}
+                                            {{ ouvrage.annee|date('Y') }}
                                         {% else %}
                                             -
                                         {% endif %}
