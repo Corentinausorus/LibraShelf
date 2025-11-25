@@ -51,6 +51,7 @@ class OuvrageFixtures extends Fixture implements DependentFixtureInterface
     {
         return [
             AuteurFixtures::class,
+            CategorieFixtures::class,
         ];
     }
 }
