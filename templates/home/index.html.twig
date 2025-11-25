@@ -3,31 +3,63 @@
 {% block title %}Bienvenue - LibraShelf{% endblock %}
 
 {% block body %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 text-center">
-            <h1 class="display-4 mb-4">Bienvenue sur LibraShelf</h1>
-            <p class="lead text-muted mb-5">
-                Votre système de gestion de bibliothèque moderne et intuitif
-            </p>
+<div class="welcome-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-10 col-lg-8 text-center">
+                <h1 class="display-4 mb-4">
+                    <i class="bi bi-book-fill"></i><br>
+                    Bienvenue sur LibraShelf
+                </h1>
+                <p class="lead mb-5">
+                    Votre système de gestion de bibliothèque moderne et intuitif.<br>
+                    Explorez, empruntez et gérez vos livres en toute simplicité.
+                </p>
 
-            <div class="card shadow-sm">
-                <div class="card-body p-5">
-                    <h2 class="h4 mb-4">Commencez dès maintenant</h2>
-                    
-                    <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
-                        <a href="{{ path('app_login') }}" class="btn btn-primary btn-lg px-4">
-                            <i class="bi bi-box-arrow-in-right"></i> Se connecter
-                        </a>
-                        <br>
-                        <a href="{{ path('app_register') }}" class="btn btn-outline-secondary btn-lg px-4">
-                            <i class="bi bi-person-plus"></i> Créer un compte
-                        </a>
+                <div class="card shadow-sm welcome-card">
+                    <div class="card-body p-5">
+                        <h2 class="h3 mb-4" style="color: #10b981; font-weight: 700;">
+                            <i class="bi bi-rocket-takeoff"></i> Commencez votre aventure
+                        </h2>
+                        <p class="text-muted mb-4">
+                            Rejoignez notre communauté de lecteurs passionnés
+                        </p>
+                        
+                        <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
+                            <a href="{{ path('app_login') }}" class="btn btn-primary btn-lg px-5">
+                                <i class="bi bi-box-arrow-in-right"></i> Se connecter
+                            </a>
+                            <a href="{{ path('app_register') }}" class="btn btn-outline-secondary btn-lg px-5">
+                                <i class="bi bi-person-plus"></i> Créer un compte
+                            </a>
+                        </div>
+
+                        <div class="row mt-5 pt-4 border-top">
+                            <div class="col-md-4 mb-3 mb-md-0">
+                                <div class="feature-box">
+                                    <i class="bi bi-search" style="font-size: 2.5rem; color: #10b981;"></i>
+                                    <h5 class="mt-3" style="color: #333;">Recherche avancée</h5>
+                                    <p class="text-muted small">Trouvez rapidement le livre parfait</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3 mb-md-0">
+                                <div class="feature-box">
+                                    <i class="bi bi-bookmark-star" style="font-size: 2.5rem; color: #10b981;"></i>
+                                    <h5 class="mt-3" style="color: #333;">Réservations</h5>
+                                    <p class="text-muted small">Réservez vos ouvrages préférés</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="feature-box">
+                                    <i class="bi bi-bell" style="font-size: 2.5rem; color: #10b981;"></i>
+                                    <h5 class="mt-3" style="color: #333;">Notifications</h5>
+                                    <p class="text-muted small">Restez informé de vos emprunts</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-
-            
         </div>
     </div>
 </div>

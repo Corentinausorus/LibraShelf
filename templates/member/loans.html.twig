@@ -3,26 +3,42 @@
 {% block title %}Mes emprunts{% endblock %}
 
 {% block body %}
-<div class="container mt-4">
-    <h1 class="mb-4">Mes emprunts</h1>
+<div class="container py-5">
+    <div class="mb-5 text-center">
+        <h1 class="display-5 fw-bold mb-3" style="color: #10b981;">
+            <i class="bi bi-journal-bookmark-fill"></i> Mes emprunts
+        </h1>
+        <p class="lead text-muted">Suivez l'état de vos emprunts en cours</p>
+    </div>
 
     {% set loans = loans|default([]) %}
 
     {% if loans is empty %}
-        <div class="alert alert-info">Vous n'avez aucun emprunt en cours.</div>
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i>
+                <h3 class="mt-4 mb-2" style="color: #10b981;">Aucun emprunt en cours</h3>
+                <p class="text-muted mb-4">Vous n'avez aucun emprunt actif pour le moment.</p>
+                <a href="{{ path('member_ouvrages') }}" class="btn btn-primary">
+                    <i class="bi bi-search"></i> Parcourir le catalogue
+                </a>
+            </div>
+        </div>
     {% else %}
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>Ouvrage</th>
-                        <th>Exemplaire / Cote</th>
-                        <th>Emprunté le</th>
-                        <th>Échéance</th>
-                        <th>Statut</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
+                            <tr>
+                                <th class="ps-4">Ouvrage</th>
+                                <th>Exemplaire / Cote</th>
+                                <th>Emprunté le</th>
+                                <th>Échéance</th>
+                                <th>Statut</th>
+                                <th class="text-end pe-4">Actions</th>
+                            </tr>
+                        </thead>
                 <tbody>
                 {% for loan in loans %}
                     {# Déduire le titre de l'ouvrage (essayer plusieurs chemins courants) #}
@@ -32,8 +48,8 @@
                     {% set cote = (loan.exemplaire is defined and loan.exemplaire and loan.exemplaire.cote) ? loan.exemplaire.cote : (loan.cote|default('—')) %}
 
                     <tr>
-                        <td>{{ titre }}</td>
-                        <td>{{ cote }}</td>
+                        <td class="ps-4 fw-bold">{{ titre }}</td>
+                        <td><span class="badge bg-light text-dark border">{{ cote }}</span></td>
 
                         {# Dates : essayer plusieurs noms possibles #}
                         <td>
@@ -69,14 +85,14 @@
                             {% endif %}
                         </td>
 
-                        <td class="text-end">
+                        <td class="text-end pe-4">
                             {# Adaptez les routes ci-dessous selon vos routes réelles #}
                             {% if statut not in ['returned','rendu'] %}
                                 <a href="{{ path('app_emprunt_return', {'id': loan.id}) }}" class="btn btn-sm btn-outline-secondary">
-                                    Retourner
+                                    <i class="bi bi-arrow-return-left"></i> Retourner
                                 </a>
-                                <a href="{{ path('app_emprunt_renew', {'id': loan.id}) }}" class="btn btn-sm btn-outline-primary ms-2">
-                                    Renouveler
+                                <a href="{{ path('app_emprunt_renew', {'id': loan.id}) }}" class="btn btn-sm btn-primary ms-2">
+                                    <i class="bi bi-arrow-clockwise"></i> Renouveler
                                 </a>
                             {% else %}
                                 <span class="text-muted small">Aucune action</span>
@@ -84,9 +100,11 @@
                         </td>
                     </tr>
                 {% endfor %}
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
         </div>
+    </div>
     {% endif %}
 </div>
 {% endblock %}

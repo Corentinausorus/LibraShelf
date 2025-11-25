@@ -1,54 +1,84 @@
-{#{% extends 'base.html.twig' %}
-
-{% block title %}Hello RegistrationController!{% endblock %}
-
-{% block body %}
-    {{ form_start(registrationForm) }}
-        {{ form_row(registrationForm.nom) }}
-        {{ form_row(registrationForm.email) }}
-        {{ form_row(registrationForm.plainPassword) }}
-        {{ form_row(registrationForm.inviteCode) }}
-        {{ form_row(registrationForm.agreeTerms) }}
-
-
-    <button type="submit">Créer le compte</button>
-
-    {{ form_end(registrationForm) }}
-
-{% endblock %}#}
 {% extends 'base.html.twig' %}
 
 {% block title %}Inscription - LibraShelf{% endblock %}
 
 {% block body %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h2>Créer un compte</h2>
+<div class="welcome-container">
+    <div class="container mt-5 mb-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="text-center mb-4">
+                    <h1 class="display-5" style="color: white; font-weight: 700;">
+                        <i class="bi bi-person-plus-fill"></i> Rejoignez-nous
+                    </h1>
+                    <p class="lead" style="color: rgba(255, 255, 255, 0.9);">
+                        Créez votre compte et commencez votre aventure littéraire
+                    </p>
                 </div>
-                <div class="card-body">
-                    {# Affichage des messages flash #}
-                    
 
-                    {{ form_start(registrationForm) }}
-                        {{ form_row(registrationForm.email) }}
-                        {{ form_row(registrationForm.nom) }}
-                        {{ form_row(registrationForm.plainPassword) }}
-                        {{ form_row(registrationForm.inviteCode) }}
-                        {{ form_row(registrationForm.agreeTerms) }}
-
-                        <div class="d-grid gap-2 mt-4">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                S'inscrire
-                            </button>
-                        </div>
-                    {{ form_end(registrationForm) }}
-                    
-                    <div class="text-center mt-3">
-                        <p>Vous avez déjà un compte ? <a href="{{ path('app_login') }}">Se connecter</a></p>
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="bi bi-pencil-square"></i> Inscription</h2>
                     </div>
+                    <div class="card-body">
+                        {# Affichage des messages flash #}
+                        {% for message in app.flashes('success') %}
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <i class="bi bi-check-circle-fill"></i> {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                        
+                        {% for message in app.flashes('error') %}
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class="bi bi-exclamation-triangle-fill"></i> {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+
+                        {{ form_start(registrationForm) }}
+                            <div class="mb-4">
+                                {{ form_row(registrationForm.email, {'attr': {'placeholder': 'votre@email.com'}}) }}
+                            </div>
+                            
+                            <div class="mb-4">
+                                {{ form_row(registrationForm.nom, {'attr': {'placeholder': 'Votre nom complet'}}) }}
+                            </div>
+                            
+                            <div class="mb-4">
+                                {{ form_row(registrationForm.plainPassword, {'attr': {'placeholder': 'Choisissez un mot de passe sécurisé'}}) }}
+                            </div>
+                            
+                            <div class="mb-4">
+                                {{ form_row(registrationForm.inviteCode, {'attr': {'placeholder': 'Code d\'invitation (si applicable)'}}) }}
+                            </div>
+                            
+                            <div class="mb-4">
+                                {{ form_row(registrationForm.agreeTerms) }}
+                            </div>
+
+                            <div class="d-grid gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-check-circle"></i> Créer mon compte
+                                </button>
+                            </div>
+                        {{ form_end(registrationForm) }}
+                        
+                        <div class="text-center mt-4 pt-3 border-top">
+                            <p class="mb-0" style="color: #666;">
+                                Vous avez déjà un compte ? 
+                                <a href="{{ path('app_login') }}" style="font-weight: 600;">
+                                    <i class="bi bi-box-arrow-in-right"></i> Se connecter
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <p style="color: rgba(255, 255, 255, 0.8); font-size: 0.9rem;">
+                        <i class="bi bi-shield-check"></i> Vos données sont protégées et sécurisées
+                    </p>
                 </div>
             </div>
         </div>

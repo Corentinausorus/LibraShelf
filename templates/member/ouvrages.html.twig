@@ -1,81 +1,106 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Ouvrages{% endblock %}
+{% block title %}Catalogue - LibraShelf{% endblock %}
 
 {% block body %}
-<div class="container mt-4">
-    <h1 class="mb-4">Liste des ouvrages</h1>
-
-    <div class="row">
-        {% for ouvrage in ouvrages %}
-            <div class="col-md-4 mb-4">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ ouvrage.titre }}</h5>
-
-                        <p class="card-text">
-                            Auteurs :
-                            {% if ouvrage.auteurs is empty %}
-                                <em>Aucun auteur</em>
-                            {% else %}
-                                {% for auteur in ouvrage.auteurs %}
-                                    <strong>{{ auteur.nom }}</strong>{% if not loop.last %}, {% endif %}
-                                {% endfor %}
-                            {% endif %}
-                            <br>
-
-                            Catégories :
-                            {% if ouvrage.categories is empty %}
-                                <em>Aucune</em>
-                            {% else %}
-                                {% for cat in ouvrage.categories %}
-                                    {{ cat.nom }}{% if not loop.last %}, {% endif %}
-                                {% endfor %}
-                            {% endif %}
-                        </p>
-
-                        <h6>Exemplaires disponibles :</h6>
-
-                        {# --- OPTIMISATION --- #}
-                        {# On vérifie simplement si l'ID est dans le tableau pré-calculé #}
-                        {% if ouvrage.id in (reservedOuvrageIds|default([])) %}
-                            <div class="alert alert-info py-2 mt-2">
-                                <i class="bi bi-info-circle"></i> Vous avez déjà réservé cet ouvrage.
-                                <br>
-                                <a href="{{ path('member_reservations') }}" class="alert-link small">Voir mes réservations</a>
-                            </div>
-                        {% else %}
-                            {# ... Affichage des boutons Réserver ... #}
-                            {% set disponibles = ouvrage.exemplaires|filter(e => e.disponible) %}
-                            
-                            {# ... vos boutons Réserver ... #}
-                            {% if disponibles is empty %}
-                                <span class="badge bg-danger">Aucun disponible</span>
-                                <a href="{{ path('member_reserve_ouvrage', { id: ouvrage.id }) }}"
-                            class="btn btn-warning btn-sm mt-2">
-                            Réserver
-                            </a>
-                            {% else %}
-                                <ul class="list-group mt-2">
-                                    {% for ex in disponibles %}
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            Cote : {{ ex.cote }}
-
-                                            <a href="{{ path('member_reserve_exemplaire', { id: ex.id }) }}"
-                                               class="btn btn-primary btn-sm">
-                                            Réserver
-                                        </a>
-                                    </li>
-                                    {% endfor %}
-                                </ul>
-                            {% endif %}
-
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        {% endfor %}
+<div class="container py-5">
+    <div class="page-header mb-5 text-center">
+        <h1 class="display-5 fw-bold mb-3" style="color: #10b981;">
+            <i class="bi bi-book-half"></i> Catalogue des ouvrages
+        </h1>
+        <p class="lead text-muted">Découvrez notre collection et réservez vos livres préférés</p>
     </div>
 
+    {% if ouvrages is empty %}
+        <div class="text-center py-5">
+            <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i>
+            <h3 class="mt-4 mb-2" style="color: #10b981;">Aucun ouvrage disponible</h3>
+            <p class="text-muted">Le catalogue est vide pour le moment.</p>
+        </div>
+    {% else %}
+        <div class="row g-4">
+            {% for ouvrage in ouvrages %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold mb-3" style="color: var(--dark);">
+                                {{ ouvrage.titre }}
+                            </h5>
+
+                            <div class="mb-3">
+                                <p class="mb-2">
+                                    <strong><i class="bi bi-person me-2" style="color: var(--primary-color);"></i>Auteur(s) :</strong><br>
+                                    {% if ouvrage.auteurs is empty %}
+                                        <em class="text-muted">Aucun auteur</em>
+                                    {% else %}
+                                        {% for auteur in ouvrage.auteurs %}
+                                            <span class="text-muted">{{ auteur.nom }}</span>{% if not loop.last %}, {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                </p>
+
+                                <p class="mb-0">
+                                    <strong><i class="bi bi-tag me-2" style="color: var(--accent-color);"></i>Catégories :</strong><br>
+                                    {% if ouvrage.categories is empty %}
+                                        <em class="text-muted">Aucune</em>
+                                    {% else %}
+                                        {% for cat in ouvrage.categories %}
+                                            <span class="badge bg-secondary me-1">{{ cat.nom }}</span>
+                                        {% endfor %}
+                                    {% endif %}
+                                </p>
+                            </div>
+
+                            <hr class="my-3">
+
+                            <h6 class="mb-3 fw-semibold" style="color: var(--dark);">
+                                <i class="bi bi-collection me-2"></i>Exemplaires disponibles :
+                            </h6>
+
+                            {% if ouvrage.id in (reservedOuvrageIds|default([])) %}
+                                <div class="alert alert-info py-2 mb-0 mt-auto">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    <strong>Déjà réservé</strong>
+                                    <br>
+                                    <a href="{{ path('member_reservations') }}" class="alert-link small">
+                                        Voir mes réservations →
+                                    </a>
+                                </div>
+                            {% else %}
+                                {% set disponibles = ouvrage.exemplaires|filter(e => e.disponible) %}
+                                
+                                {% if disponibles is empty %}
+                                    <div class="d-flex flex-column gap-2 mt-auto">
+                                        <span class="badge bg-danger align-self-start">
+                                            <i class="bi bi-x-circle me-1"></i>Aucun disponible
+                                        </span>
+                                        <a href="{{ path('member_reserve_ouvrage', { id: ouvrage.id }) }}"
+                                           class="btn btn-warning w-100">
+                                            <i class="bi bi-bookmark-star me-2"></i>Réserver
+                                        </a>
+                                    </div>
+                                {% else %}
+                                    <div class="list-group list-group-flush mt-auto">
+                                        {% for ex in disponibles %}
+                                            <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                                <span>
+                                                    <i class="bi bi-check-circle text-success me-2"></i>
+                                                    Cote : <strong>{{ ex.cote }}</strong>
+                                                </span>
+                                                <a href="{{ path('member_reserve_exemplaire', { id: ex.id }) }}"
+                                                   class="btn btn-primary btn-sm">
+                                                    <i class="bi bi-bookmark-plus me-1"></i>Réserver
+                                                </a>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
 </div>
 {% endblock %}

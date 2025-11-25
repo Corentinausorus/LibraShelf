@@ -3,12 +3,19 @@
 {% block title %}Administration — Utilisateurs{% endblock %}
 
 {% block body %}
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="h3"><i class="bi bi-people"></i> Gestion des utilisateurs</h1>
-        <a href="{{ path('admin_dashboard') }}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Retour
-        </a>
+<div class="container py-5">
+    <div class="mb-5">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="display-6 fw-bold mb-2" style="color: #10b981;">
+                    <i class="bi bi-people-fill"></i> Gestion des utilisateurs
+                </h1>
+                <p class="text-muted mb-0">Gérez les rôles et permissions des utilisateurs</p>
+            </div>
+            <a href="{{ path('admin_dashboard') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Retour
+            </a>
+        </div>
     </div>
 
     {% for label, messages in app.flashes %}
@@ -20,25 +27,25 @@
         {% endfor %}
     {% endfor %}
 
-    <div class="card shadow-sm">
+    <div class="card">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
-                    <thead class="table-light">
+                    <thead style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
                         <tr>
-                            <th scope="col">#</th>
+                            <th scope="col" class="ps-4">#</th>
                             <th scope="col">Email</th>
                             <th scope="col">Nom</th>
                             <th scope="col">Rôle</th>
-                            <th scope="col" class="text-end">Actions</th>
+                            <th scope="col" class="text-end pe-4">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for user in users %}
                             <tr>
-                                <td>{{ user.id }}</td>
-                                <td>{{ user.email }}</td>
-                                <td>{{ user.nom }}</td>
+                                <td class="ps-4">{{ user.id }}</td>
+                                <td><i class="bi bi-envelope text-muted"></i> {{ user.email }}</td>
+                                <td class="fw-bold">{{ user.nom }}</td>
                                 <td>
                                     {% set role = user.getRole ? user.getRole() : (user.role is defined ? user.role : '') %}
                                     {% if role == 'ROLE_ADMIN' %}
@@ -49,13 +56,13 @@
                                         <span class="badge bg-secondary"><i class="bi bi-person"></i> Membre</span>
                                     {% endif %}
                                 </td>
-                                <td class="text-end">
+                                <td class="text-end pe-4">
                                     {% if app.user and app.user.getId() == user.getId() %}
                                         <button class="btn btn-sm btn-outline-secondary" disabled title="Vous ne pouvez pas modifier votre propre rôle ici">
                                             <i class="bi bi-lock"></i> Modifier
                                         </button>
                                     {% else %}
-                                        <a href="{{ path('admin_user_edit_role', {id: user.id}) }}" class="btn btn-sm btn-outline-primary">
+                                        <a href="{{ path('admin_user_edit_role', {id: user.id}) }}" class="btn btn-sm btn-primary">
                                             <i class="bi bi-pencil-square"></i> Modifier
                                         </a>
                                     {% endif %}

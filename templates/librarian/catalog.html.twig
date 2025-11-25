@@ -3,36 +3,55 @@
 {% block title %}Catalogue - Bibliothécaire{% endblock %}
 
 {% block body %}
-<div class="container py-4">
-    <h1 class="h4 mb-4"><i class="bi bi-journal-bookmark"></i> Gestion du Catalogue</h1>
+<div class="container py-5">
+    <div class="mb-5 text-center">
+        <h1 class="display-5 fw-bold mb-3" style="color: #10b981;">
+            <i class="bi bi-journal-bookmark"></i> Gestion du Catalogue
+        </h1>
+        <p class="lead text-muted">Gérez les ouvrages et exemplaires de votre bibliothèque</p>
+    </div>
 
     <div class="row g-4">
         <div class="col-md-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="card-title"><i class="bi bi-book"></i> Ouvrages</h5>
-                    <p class="card-text">Gérer les ouvrages du catalogue : ajouter, modifier, supprimer.</p>
-                    <a href="{{ path('librarian_ouvrages') }}" class="btn btn-primary">
-                        <i class="bi bi-arrow-right"></i> Accéder aux ouvrages
+            <div class="card h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-circle me-3">
+                            <i class="bi bi-book-fill" style="font-size: 2rem; color: #10b981;"></i>
+                        </div>
+                        <h5 class="card-title mb-0 fw-bold">Ouvrages</h5>
+                    </div>
+                    <p class="card-text text-muted">
+                        Gérez les ouvrages du catalogue : ajouter, modifier, supprimer et organiser.
+                    </p>
+                    <a href="{{ path('librarian_ouvrages') }}" class="btn btn-primary mt-3">
+                        <i class="bi bi-arrow-right-circle"></i> Gérer les ouvrages
                     </a>
                 </div>
             </div>
         </div>
         <div class="col-md-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="card-title"><i class="bi bi-copy"></i> Exemplaires</h5>
-                    <p class="card-text">Gérer les exemplaires physiques des ouvrages.</p>
-                    <a href="{{ path('librarian_exemplaires') }}" class="btn btn-primary">
-                        <i class="bi bi-arrow-right"></i> Accéder aux exemplaires
+            <div class="card h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-circle me-3">
+                            <i class="bi bi-collection-fill" style="font-size: 2rem; color: #10b981;"></i>
+                        </div>
+                        <h5 class="card-title mb-0 fw-bold">Exemplaires</h5>
+                    </div>
+                    <p class="card-text text-muted">
+                        Gérez les exemplaires physiques et suivez leur disponibilité.
+                    </p>
+                    <a href="{{ path('librarian_exemplaires') }}" class="btn btn-primary mt-3">
+                        <i class="bi bi-arrow-right-circle"></i> Gérer les exemplaires
                     </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="mt-4">
-        <a href="{{ path('librarian_dashboard') }}" class="btn btn-secondary">
+    <div class="mt-4 text-center">
+        <a href="{{ path('librarian_dashboard') }}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left"></i> Retour au tableau de bord
         </a>
     </div>

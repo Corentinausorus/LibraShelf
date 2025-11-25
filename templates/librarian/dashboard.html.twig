@@ -4,59 +4,66 @@
 {% block title %}Espace bibliothécaire - LibraShelf{% endblock %}
 
 {% block body %}
-<div class="container-fluid">
-    <div class="row">
-        {# Menu latéral bibliothécaire #}
-        <nav class="col-md-3 col-lg-2 d-md-block bg-dark sidebar">
-            <div class="position-sticky pt-3">
-                <h6 class="sidebar-heading px-3 mt-4 mb-1 text-white-50">
-                    <span>Gestion</span>
-                </h6>
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link text-white active" href="{{ path('librarian_dashboard') }}">
-                            Tableau de bord
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="{{ path('librarian_ouvrages') }}">
-                            <i class="bi bi-book"></i> Gestion des ouvrages
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="{{ path('ouvrage_liste') }}">
-                            Catalogue
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="{{ path('librarian_loans') }}">
-                            Emprunts
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="{{ path('librarian_members') }}">
-                            Membres
-                        </a>
-                    </li>
-                   
-                </ul>
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-5 fw-bold mb-3" style="color: #10b981;">
+            <i class="bi bi-speedometer2"></i> Espace Bibliothécaire
+        </h1>
+        <p class="lead text-muted">Tableau de bord de gestion</p>
+    </div>
 
-                <ul class="nav flex-column mb-2">
-                    
-                
-                </ul>
-
-                <hr class="text-white-50">
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="{{ path('app_logout') }}">
-                            Se déconnecter
-                        </a>
-                    </li>
-                </ul>
+    <div class="row g-4">
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body text-center p-4">
+                    <i class="bi bi-book-fill" style="font-size: 3rem; color: #10b981;"></i>
+                    <h5 class="mt-3 mb-3 fw-bold">Ouvrages</h5>
+                    <p class="text-muted small mb-3">Gérez le catalogue</p>
+                    <a href="{{ path('librarian_ouvrages') }}" class="btn btn-primary btn-sm w-100">
+                        <i class="bi bi-arrow-right-circle"></i> Accéder
+                    </a>
+                </div>
             </div>
-        </nav>
+        </div>
 
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body text-center p-4">
+                    <i class="bi bi-collection-fill" style="font-size: 3rem; color: #10b981;"></i>
+                    <h5 class="mt-3 mb-3 fw-bold">Catalogue</h5>
+                    <p class="text-muted small mb-3">Parcourir les livres</p>
+                    <a href="{{ path('ouvrage_liste') }}" class="btn btn-primary btn-sm w-100">
+                        <i class="bi bi-arrow-right-circle"></i> Accéder
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body text-center p-4">
+                    <i class="bi bi-arrow-left-right" style="font-size: 3rem; color: #10b981;"></i>
+                    <h5 class="mt-3 mb-3 fw-bold">Emprunts</h5>
+                    <p class="text-muted small mb-3">Gérer les prêts</p>
+                    <a href="{{ path('librarian_loans') }}" class="btn btn-primary btn-sm w-100">
+                        <i class="bi bi-arrow-right-circle"></i> Accéder
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body text-center p-4">
+                    <i class="bi bi-people-fill" style="font-size: 3rem; color: #10b981;"></i>
+                    <h5 class="mt-3 mb-3 fw-bold">Membres</h5>
+                    <p class="text-muted small mb-3">Voir les utilisateurs</p>
+                    <a href="{{ path('librarian_members') }}" class="btn btn-primary btn-sm w-100">
+                        <i class="bi bi-arrow-right-circle"></i> Accéder
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
