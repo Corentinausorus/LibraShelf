@@ -5,11 +5,14 @@ namespace App\Controller;
 use App\Entity\Ouvrage;
 use App\Entity\Reservation;
 use App\Form\ReservationType;
+use App\Message\ReservationAvailableNotification;
 use App\Repository\ReservationRepository;
+use App\Service\ReservationNotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/reservation')]
@@ -100,12 +103,20 @@ final class ReservationController extends AbstractController
     }
 
     #[Route('/add/{id}', name: 'app_reservation_add', methods: ['GET'])]
-    public function add(Ouvrage $ouvrage, EntityManagerInterface $entityManager): Response
+    public function add(
+        Ouvrage $ouvrage, 
+        EntityManagerInterface $entityManager,
+        ReservationNotificationService $notificationService,
+        MessageBusInterface $messageBus
+    ): Response
     {
         $user = $this->getUser();
         if (!$user) return $this->redirectToRoute('app_login');
 
+        /** @var \App\Entity\Exemplaires|null $exemplaireDispo */
         $exemplaireDispo = null;
+        
+        /** @var \App\Entity\Exemplaires $ex */
         foreach ($ouvrage->getExemplaires() as $ex) {
             if ($ex->isDisponible()) {
                 $exemplaireDispo = $ex;
@@ -134,6 +145,14 @@ final class ReservationController extends AbstractController
 
         $entityManager->persist($reservation);
         $entityManager->flush();
+
+        // Envoyer l'email de confirmation de réservation
+        $notificationService->sendReservationConfirmation($reservation);
+
+        // Si un exemplaire est disponible immédiatement, envoyer aussi la notification de disponibilité (async)
+        if ($exemplaireDispo) {
+            $messageBus->dispatch(new ReservationAvailableNotification($reservation->getId()));
+        }
 
         return $this->redirectToRoute('member_reservations');
     }
