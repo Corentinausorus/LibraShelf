@@ -19,7 +19,7 @@ class Emprunt
     #[ORM\JoinColumn(nullable: false)]
     private ?User $User = null;
 
-    #[ORM\OneToOne(inversedBy: 'startAt', cascade: ['persist', 'remove'])]
+    #[ORM\ManyToOne]
     private ?Exemplaires $exemplaire = null;
 
     #[ORM\Column]

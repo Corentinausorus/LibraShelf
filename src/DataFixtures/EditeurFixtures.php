@@ -12,7 +12,6 @@ class EditeurFixtures extends Fixture
 
     public function load(ObjectManager $manager): void
     {
-        // Liste d'éditeurs français réalistes
         $editeurs = [
             'Gallimard',
             'Hachette Livre',
