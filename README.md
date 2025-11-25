@@ -1,346 +1,537 @@
-# LibraShelf
+# LibraShelf - Système de Gestion de Bibliothèque
 
-Application de gestion de bibliothèque développée avec Symfony 6.4/7.x et PHP ≥ 8.2.
+## 📚 À propos
 
-## Table des matières
+LibraShelf est une application web complète de gestion de bibliothèque développée avec Symfony. Elle permet la gestion des ouvrages, des exemplaires, des emprunts, des réservations et des utilisateurs avec un système de rôles sophistiqué.
 
-- [Fonctionnalités](#-fonctionnalités)
-- [Prérequis](#-prérequis)
-- [Installation](#-installation)
-- [Configuration](#️-configuration)
-- [Lancement de l'application](#-lancement-de-lapplication)
-- [Utilisation](#-utilisation)
-- [Tests](#-tests)
-- [Qualité du code](#-qualité-du-code)
-- [Architecture](#-architecture)
-- [Sécurité](#-sécurité)
+## ✨ Fonctionnalités principales
 
-## Fonctionnalités
+### 🔐 Gestion des utilisateurs et authentification
 
-### Gestion du catalogue
-- **Ouvrages** : titre, auteurs multiples, éditeur, ISBN/ISSN, catégories, tags, langues, année de publication, résumé
-- **Exemplaires** : cote, état physique, disponibilité en temps réel
-- **Recherche avancée** : filtres par titre, catégories, langues, année, disponibilité
-- **Gestion multi-auteurs** : association flexible d'auteurs aux ouvrages
+- **Inscription avec codes d'invitation**
+  - Membres : accès public sans code
+  - Bibliothécaires : code d'invitation requis (configuré dans `.env`)
+- **Système de rôles** : `ROLE_MEMBER`, `ROLE_LIBRARIAN`, `ROLE_ADMIN`
+- **Authentification sécurisée** avec hashage bcrypt des mots de passe
+- **Profil utilisateur** personnalisé
+- **Redirection automatique** selon le rôle après connexion
 
-### Système d'emprunt et réservations
-- **Flux d'emprunt** : création, suivi, retour, gestion des retards
-- **Réservations** : file d'attente avec priorité par ancienneté
-- **Pénalités automatiques** : calcul basé sur un barème configurable
-- **Règles métier** : durée d'emprunt par catégorie, nombre maximum d'emprunts simultanés
+### 📖 Gestion du catalogue
 
-### Notifications automatiques
-- **Rappels d'emprunt** : envoi à J-3, J0 (échéance), J+7 (retard)
-- **Confirmations de réservation** : notification lors de la réservation
-- **Disponibilité** : email lorsqu'un ouvrage réservé devient disponible
-- **Traitement asynchrone** : envoi via messenger/queue
+#### Ouvrages
+- **CRUD complet** des ouvrages (création, lecture, modification, suppression)
+- **Informations détaillées** :
+  - Titre, ISBN (unique)
+  - Auteur(s) - relation Many-to-Many
+  - Éditeur - relation Many-to-One
+  - Catégorie(s) - relation Many-to-Many
+  - Tags - relation Many-to-Many
+  - Langues (stockées en JSON)
+  - Année de publication
+  - Résumé
+  - Créé par (utilisateur bibliothécaire)
 
-### Planification (Scheduler)
-- **Rappels batch** : envoi automatique des emails de rappel
-- **Purge des données** : nettoyage automatique des emprunts après 30 jours
-- **Gestion des logs** : cycle de vie limité à 50 jours maximum
+- **Recherche avancée** avec filtres multiples :
+  - Par titre
+  - Par catégorie
+  - Par langue
+  - Par année de publication
+  - Par disponibilité
 
-### Gestion des rôles et sécurité
-- **Rôles** : `ROLE_ADMIN`, `ROLE_LIBRARIAN`, `ROLE_MEMBER`
-- **Authentification** : session Symfony classique avec cycle de vie des mots de passe
-- **RBAC fin** : voters personnalisés pour toutes les actions sensibles
-- **Protection** : CSRF tokens, rate limiting, headers HTTP sécurisés
+#### Exemplaires
+- **Gestion des exemplaires physiques** de chaque ouvrage
+- **Suivi de l'état** : neuf, bon, usé, endommagé, etc.
+- **Système de cote** pour l'organisation physique
+- **Indicateur de disponibilité** en temps réel
+- **Historique d'inventaire** avec tracking des changements de statut
+- **Association** ouvrage-exemplaire (1 ouvrage → N exemplaires)
 
-### Interfaces utilisateur
-- **Back-office** : gestion complète du catalogue, usagers, emprunts (Twig)
-- **Tableau de bord KPI** : pourcentage de livres empruntés, délais moyens
-- **Recherche publique** : interface accessible et responsive
-- **Accessibilité** : respect des standards WCAG
+#### Métadonnées
+- **Auteurs** : gestion centralisée avec relations multiples
+- **Éditeurs** : organisation par maison d'édition
+- **Catégories** : classification thématique (roman, essai, BD, etc.)
+- **Tags** : étiquettes personnalisées pour recherche avancée
 
-### Audit et conformité
-- **Journal d'audit immuable** : traçabilité complète (qui/quoi/quand) via logs
-- **Protection des données** : cycle de vie contrôlé des données sensibles
-- **Validation stricte** : contraintes personnalisées (ISBN, objets valeur)
+### 📝 Système de réservation
 
-## Prérequis
+- **Réservation intelligente** :
+  - Attribution automatique d'un exemplaire disponible
+  - Mise en file d'attente si tous les exemplaires sont empruntés
+  - Statuts : "À récupérer", "En attente"
+  
+- **Délai de récupération** : 48 heures pour venir chercher le livre réservé
 
-- PHP ≥ 8.2
-- Composer
-- Symfony CLI (recommandé)
-- PostgreSQL/MySQL ≥ 8.0 / SQLite (dev)
-- Node.js & npm (si front séparé)
-- Extension PHP : `pdo`, `intl`, `opcache`, `apcu`
+- **Gestion des réservations** :
+  - Visualisation des réservations actives
+  - Annulation possible par l'utilisateur
+  - Libération automatique de l'exemplaire lors de l'annulation
 
-## Installation
+- **Notifications par email** :
+  - Confirmation de réservation (synchrone)
+  - Notification de disponibilité (asynchrone via Symfony Messenger)
 
-### 1. Cloner le repository
+### 📚 Gestion des emprunts
 
-```bash
-git clone https://github.com/Corentinausorus/LibraShelf.git
-cd LibraShelf
-```
+- **Création d'emprunts** avec dates automatiques :
+  - Date de début (date du jour)
+  - Date de retour calculée selon les paramètres configurés
+  
+- **Statuts d'emprunt** : 
+  - `en_cours` : emprunt actif
+  - `en_retard` : date de retour dépassée
+  - `retourné` : livre rendu
 
-### 2. Installer les dépendances
+- **Calcul automatique de pénalités** pour les retards :
+  - Montant configurable par jour de retard
+  - Jours de tolérance avant application des pénalités
 
-```bash
-composer install
-npm install  # Si utilisation d'assets front
-```
+- **Système de rappels automatiques** :
+  - **J-3** : rappel 3 jours avant la date de retour
+  - **J-0** : rappel le jour de la date de retour
+  - **J+7** : rappel après 7 jours de retard
 
-### 3. Configurer l'environnement
+### 📧 Système de notifications
 
-Copier le fichier `.env` et ajuster les paramètres :
+- **Types de notifications** :
+  - Email (via Symfony Mailer)
+  - SMS (infrastructure prévue)
 
-```bash
-cp .env .env.local
-```
+- **Notifications asynchrones** :
+  - Système de queue avec Symfony Messenger
+  - Transport configuré pour traitement différé
+  - Worker dédié pour consommer les messages
 
-Éditer `.env.local` :
+- **Stockage en base de données** :
+  - Historique complet de toutes les notifications envoyées
+  - Type, destinataire, sujet, contenu
+  - Traçabilité complète
 
-```env
-# Base de données
-DATABASE_URL="sqlite:///%kernel.project_dir%/var/data_%kernel.environment%.db"
+- **Templates d'emails** personnalisés :
+  - Confirmation de réservation
+  - Livre disponible
+  - Rappels d'emprunt (J-3, J-0, J+7)
 
-# Messenger (async)
-MESSENGER_TRANSPORT_DSN=doctrine://default
+### ⚙️ Configuration des règles d'emprunt
 
-# APP
-APP_ENV=dev
-APP_SECRET=votre_secret_genere
+Paramètres configurables via l'entité `ParametreEmprunt` :
+- **Durée d'emprunt** par défaut (en jours)
+- **Montant de pénalité** par jour de retard (en centimes)
+- **Jours de tolérance** avant application des pénalités
+- **Historique** des configurations avec horodatage
 
-LIBRARIAN_INVITE_CODE=BIBLIO2025SECRET
-```
+### 🎨 Interface utilisateur
 
-### 4. Créer la base de données
+#### Page d'accueil publique (`/`)
+- Présentation de la bibliothèque
+- Liens vers inscription et connexion
+- Redirection automatique selon le rôle si connecté
 
-```bash
-php bin/console doctrine:database:create
-php bin/console doctrine:migrations:migrate
-```
+#### Espace Membre (`/member`)
+- **Dashboard personnalisé** avec vue d'ensemble
+- **Catalogue** avec recherche avancée et filtres
+  - Visualisation des ouvrages disponibles
+  - Détails complets de chaque ouvrage
+  - Bouton de réservation direct
+- **Mes réservations** :
+  - Liste des réservations actives
+  - Statut (à récupérer / en attente)
+  - Possibilité d'annulation
+- **Mes emprunts** en cours avec dates de retour
 
-### 5. Charger les données de test
+#### Espace Bibliothécaire (`/librarian`)
+- **Dashboard de gestion** avec statistiques
+- **Gestion du catalogue** :
+  - CRUD complet des ouvrages
+  - CRUD complet des exemplaires
+  - Association ouvrages-exemplaires
+  - Formulaires avec validation
+- **Gestion des réservations** :
+  - Vue d'ensemble de toutes les réservations
+  - Filtrage par statut
+- **Gestion des emprunts** :
+  - Suivi des emprunts actifs
+  - Traitement des retours
+  - Calcul automatique des pénalités
+- **Gestion des membres** :
+  - Liste complète des utilisateurs
+  - Détails et historique
 
-**Utiliser les fixtures Doctrine**
-
-```bash
-php bin/console doctrine:fixtures:load
-```
-
-### 6. Créer un utilisateur admin
-
-Ou utiliser les fixtures qui créent automatiquement :
-- Admin : `admin@librashelf.local` / `admin123`
-- Librarian : `librarian1@librashelf.local` / `librarian123`
-- Member : utiliser un des emails générés (ex: voir en base) / `member123`
-
-## Configuration
-
-### Règles métier
-
-Configurer les durées d'emprunt par catégorie dans `config/services.yaml` :
-
-```yaml
-parameters:
-    emprunt.durees:
-        Roman: 21
-        Science: 14
-        Informatique: 30
-        default: 14
-    
-    emprunt.max_simultanes: 5
-    
-    penalites.bareme:
-        par_jour: 0.50
-        max: 50.00
-```
-
-## Lancement de l'application
-
-### Développement
-
-**Option 1 : Symfony CLI (recommandé)**
-
-```bash
-symfony server:start
-```
-
-Application disponible sur `https://127.0.0.1:8000`
-
-**Option 2 : Serveur PHP intégré**
+### 🔧 Commandes console
 
 ```bash
-php -S localhost:8000 -t public/
-```
+# Envoyer les rappels d'emprunt automatiques
+# À configurer en cron job pour exécution quotidienne
+php bin/console app:send-loan-reminders
 
-### Worker Messenger (pour emails asynchrones)
+# Créer des emprunts de test pour les rappels (développement)
+php bin/console app:test-loan-reminders
 
-Dans un terminal séparé :
+# Tester les notifications de réservation (développement)
+php bin/console app:test-reservation-notifications
 
-```bash
+# Tester le dispatch asynchrone (développement)
+php bin/console app:test-async-notification
+
+# Consommer les messages asynchrones (production)
+# -vv pour mode verbose
 php bin/console messenger:consume async -vv
 ```
 
-### Scheduler (tâches planifiées)
+### 📊 Commandes Doctrine
 
 ```bash
-php bin/console messenger:consume scheduler_default -vv
+# Créer la base de données
+php bin/console doctrine:database:create
+
+# Créer/exécuter les migrations
+php bin/console make:migration
+php bin/console doctrine:migrations:migrate
+
+# Vider la base (attention : destructif)
+php bin/console doctrine:database:drop --force
 ```
 
-### Production
+## 🗄️ Modèle de données
+
+### Entités principales
+
+- **User** : utilisateurs avec rôles et informations personnelles
+- **Ouvrage** : œuvres littéraires avec métadonnées complètes
+- **Exemplaires** : copies physiques des ouvrages avec état et disponibilité
+- **Emprunt** : emprunts actifs et historique avec dates et pénalités
+- **Reservation** : réservations avec file d'attente et assignation
+- **Penalites** : gestion des pénalités utilisateurs
+- **Notifications** : historique des notifications envoyées
+- **ParametreEmprunt** : configuration dynamique du système
+- **HistoriqueInventaire** : suivi des changements de statut des exemplaires
+- **Auteur** : auteurs avec relations multiples aux ouvrages
+- **Editeur** : maisons d'édition
+- **Categorie** : catégories thématiques
+- **Tags** : étiquettes personnalisées
+
+### Relations principales
+
+```
+User 1 ----< N Emprunt
+User 1 ----< N Reservation
+User 1 ----< N Penalites
+
+Ouvrage 1 ----< N Exemplaires
+Ouvrage 1 ----< N Reservation
+Ouvrage N ----< N Auteur
+Ouvrage N ----< N Categorie
+Ouvrage N ----< N Tags
+Ouvrage N ----< 1 Editeur
+
+Exemplaires 1 ----< 1 Emprunt
+Exemplaires 1 ----< 1 Reservation (nullable)
+Exemplaires 1 ----< N HistoriqueInventaire
+```
+
+## 🚀 Installation
+
+### Prérequis
+
+- PHP 8.1 ou supérieur
+- Composer 2.x
+- MySQL 5.7+ / MariaDB 10.3+
+- Symfony CLI (recommandé)
+- Extension PHP : pdo_mysql, intl, mbstring
+
+### Étapes d'installation
 
 ```bash
-# Build assets
-npm run build
+# 1. Cloner le projet
+git clone https://github.com/votre-username/LibraShelf.git
+cd LibraShelf
 
-# Optimisations
-composer install --no-dev --optimize-autoloader
-php bin/console cache:clear --env=prod
-php bin/console cache:warmup --env=prod
+# 2. Installer les dépendances
+composer install
 
-# Lancer avec un serveur web (Nginx/Apache + PHP-FPM)
+# 3. Configurer les variables d'environnement
+cp .env .env.local
+
+# Éditer .env.local avec vos paramètres :
+# - DATABASE_URL
+# - MAILER_DSN
+# - LIBRARIAN_INVITE_CODE
 ```
 
-### Docker (bonus)
+### Configuration de la base de données
+
+```env
+# .env.local
+DATABASE_URL="mysql://username:password@127.0.0.1:3306/librashelf?serverVersion=8.0&charset=utf8mb4"
+```
 
 ```bash
-docker-compose up -d
+# Créer la base de données
+php bin/console doctrine:database:create
+
+# Exécuter les migrations
+php bin/console doctrine:migrations:migrate
 ```
 
-Services disponibles :
-- App : `http://localhost:8000`
-- Database : `localhost:5432`
-- MailCatcher : `http://localhost:1080`
+### Configuration des emails
 
-## Utilisation
+```env
+# .env.local
+# Exemple avec Gmail
+MAILER_DSN=gmail://username:password@default
 
-### Connexion
+# Exemple avec Mailtrap (développement)
+MAILER_DSN=smtp://username:password@smtp.mailtrap.io:2525
+```
 
-- **Admin** : accès complet (gestion utilisateurs, configuration, statistiques)
-- **Librarian** : gestion catalogue, emprunts, réservations
-- **Member** : recherche, emprunts personnels, réservations
+### Configuration du code d'invitation
 
-### Workflows principaux
+```env
+# .env.local
+LIBRARIAN_INVITE_CODE="BIBLIO2025SECRET"
+```
 
-**1. Créer un ouvrage (Librarian/Admin)**
-- Menu : Catalogue → Nouvel ouvrage
-- Renseigner titre, auteurs, ISBN, catégories
-- Ajouter exemplaires avec cotes et états
+### Configuration de Symfony Messenger
 
-**2. Effectuer un emprunt (Librarian)**
-- Menu : Emprunts → Nouvel emprunt
-- Sélectionner membre et exemplaire disponible
-- Date de retour calculée automatiquement selon les règles
+```yaml
+# config/packages/messenger.yaml
+framework:
+    messenger:
+        transports:
+            async: '%env(MESSENGER_TRANSPORT_DSN)%'
+        routing:
+            'App\Message\ReservationAvailableNotification': async
+```
 
-**3. Réserver un ouvrage (Member)**
-- Rechercher l'ouvrage
-- Cliquer sur "Réserver"
-- Notification email envoyée lors de la disponibilité
+```env
+# .env.local
+MESSENGER_TRANSPORT_DSN=doctrine://default?auto_setup=0
+```
 
-**4. Gérer les retours (Librarian)**
-- Menu : Emprunts → Liste
-- Marquer comme retourné
-- Pénalités calculées automatiquement si retard
-
-**5. Consulter les statistiques (Admin)**
-- Menu : Tableau de bord
-- KPI : taux d'emprunt, délais moyens, réservations en attente
-
-## Tests
-
-### Tests unitaires
+### Lancer l'application
 
 ```bash
-php bin/phpunit tests/Unit
+# Démarrer le serveur Symfony
+symfony server:start
+
+# Ou avec le serveur PHP intégré
+php -S localhost:8000 -t public/
+
+# Démarrer le worker pour les messages asynchrones (dans un autre terminal)
+php bin/console messenger:consume async -vv
 ```
 
-### Tests d'intégration
+L'application est maintenant accessible sur `http://localhost:8000`
+
+## 📦 Technologies utilisées
+
+### Backend
+- **Framework** : Symfony 7.x
+- **ORM** : Doctrine
+- **Base de données** : MySQL / MariaDB
+- **Validation** : Symfony Validator
+- **Sécurité** : Symfony Security Component
+- **Emails** : Symfony Mailer
+- **Messages asynchrones** : Symfony Messenger
+
+### Frontend
+- **Templating** : Twig
+- **Formulaires** : Symfony Forms
+- **CSS** : Bootstrap (via CDN)
+- **Assets** : Symfony AssetMapper
+- **UX** : Symfony UX (Turbo prévu)
+
+### Développement
+- **Maker Bundle** : génération de code
+- **Profiler** : débogage et performance
+- **Debug Bundle** : outils de développement
+
+## 🔒 Sécurité
+
+### Authentification
+- **Hashage bcrypt** des mots de passe
+- **Session sécurisée** avec CSRF
+- **Remember me** optionnel
+
+### Autorisation
+- **Contrôle d'accès** basé sur les rôles avec `#[IsGranted]`
+- **Hiérarchie des rôles** :
+  - `ROLE_MEMBER` : accès membre de base
+  - `ROLE_LIBRARIAN` : accès bibliothécaire (hérite de MEMBER)
+  - `ROLE_ADMIN` : accès administrateur (hérite de LIBRARIAN)
+
+### Validation
+- **Protection CSRF** sur tous les formulaires
+- **Validation des données** côté serveur avec contraintes Doctrine
+- **Contraintes d'unicité** : email, ISBN
+- **Validation personnalisée** selon les règles métier
+
+### Bonnes pratiques
+- **Pas de données sensibles** dans le contrôle de version
+- **Variables d'environnement** pour la configuration
+- **Préparation des requêtes** SQL (protection injection)
+- **Échappement automatique** dans Twig (protection XSS)
+
+## 🔄 Workflows
+
+### Workflow de réservation
+
+1. **Membre sélectionne un ouvrage** dans le catalogue
+2. **Clic sur "Réserver"**
+3. **Système vérifie la disponibilité** :
+   - Si exemplaire disponible → assignation immédiate (statut "À récupérer")
+   - Sinon → mise en file d'attente (statut "En attente")
+4. **Email de confirmation** envoyé immédiatement
+5. **Si assignation immédiate** : email de disponibilité envoyé (asynchrone)
+6. **Délai de 48h** pour récupérer le livre
+7. **Membre peut annuler** sa réservation à tout moment
+
+### Workflow d'emprunt
+
+1. **Bibliothécaire crée l'emprunt** (via interface ou scan)
+2. **Dates calculées automatiquement** selon configuration
+3. **Exemplaire marqué comme indisponible**
+4. **Statut** : `en_cours`
+5. **Rappel J-3** : email 3 jours avant échéance
+6. **Rappel J-0** : email le jour de l'échéance
+7. **Si retard** : statut passe à `en_retard`
+8. **Rappel J+7** : email après 7 jours de retard
+9. **Retour** : bibliothécaire traite le retour
+10. **Calcul pénalités** si applicable
+11. **Statut** : `retourné`
+
+### Workflow de notification asynchrone
+
+1. **Événement déclenché** (ex: réservation disponible)
+2. **Message dispatché** dans la queue Messenger
+3. **Message stocké** dans la table `messenger_messages`
+4. **Worker consomme** le message
+5. **Handler traite** le message (envoi email)
+6. **Notification enregistrée** en base de données
+7. **Message supprimé** de la queue
+
+## 📈 Administration
+
+### Gestion des paramètres d'emprunt
+
+Les paramètres se configurent directement en base de données via l'entité `ParametreEmprunt` :
+
+```sql
+-- Exemple de configuration
+INSERT INTO parametre_emprunt (emprunt_duree_jours, penalite_centimes_par_jour, jours_tolerance, configuration)
+VALUES (14, 50, 2, NOW());
+```
+
+- `emprunt_duree_jours` : durée par défaut (14 jours = 2 semaines)
+- `penalite_centimes_par_jour` : 50 centimes = 0,50€ par jour
+- `jours_tolerance` : 2 jours de grâce avant pénalités
+
+### Tâches planifiées (Cron)
 
 ```bash
-php bin/phpunit tests/Integration
+# Ajoutez ces lignes à votre crontab
+# Rappels quotidiens à 8h du matin
+0 8 * * * cd /path/to/librashelf && php bin/console app:send-loan-reminders
+
+# Worker permanent (redémarre si crash)
+* * * * * cd /path/to/librashelf && php bin/console messenger:consume async --limit=100
 ```
 
-### Tests end-to-end
+### Supervision
 
 ```bash
-php bin/phpunit tests/E2E
+# Vérifier les messages en attente
+php bin/console messenger:stats
+
+# Vérifier les logs
+tail -f var/log/dev.log
+
+# Nettoyer le cache
+php bin/console cache:clear
 ```
 
-### Couverture de code
+## 🧪 Tests
+
+### Commandes de test disponibles
 
 ```bash
-XDEBUG_MODE=coverage php bin/phpunit --coverage-html var/coverage
+# Tester les rappels d'emprunt
+php bin/console app:test-loan-reminders
+php bin/console app:send-loan-reminders
+
+# Tester les notifications de réservation
+php bin/console app:test-reservation-notifications
+
+# Tester le système asynchrone
+php bin/console app:test-async-notification
+php bin/console messenger:consume async -vv
 ```
 
-Rapport disponible dans `var/coverage/index.html`
+## 🐛 Dépannage
 
-## Qualité du code
-
-### PHP-CS-Fixer
-
-Vérifier le style :
+### Problème de connexion à la base de données
 
 ```bash
-vendor/bin/php-cs-fixer fix --dry-run --diff
+# Vérifier la configuration
+php bin/console debug:config doctrine
+
+# Tester la connexion
+php bin/console doctrine:database:create
 ```
 
-Corriger automatiquement :
+### Emails non envoyés
 
 ```bash
-vendor/bin/php-cs-fixer fix
+# Vérifier la configuration mailer
+php bin/console debug:config framework mailer
+
+# Tester l'envoi
+php bin/console app:test-reservation-notifications
 ```
 
-### PHPStan (analyse statique)
+### Messages non consommés
 
 ```bash
-vendor/bin/phpstan analyse src tests --level=8
+# Vérifier les transports
+php bin/console messenger:stats
+
+# Consommer manuellement
+php bin/console messenger:consume async -vv
+
+# Vérifier la table messenger_messages
+SELECT * FROM messenger_messages;
 ```
 
-## 🏗 Architecture
+### Erreurs de permissions
 
-### Structure
-
-```
-src/
-├── Command/          # Commandes CLI (génération données, admin, scheduler)
-├── Controller/       # Contrôleurs légers (délégation aux services)
-├── DataFixtures/     # Fixtures Doctrine pour seeding
-├── Entity/           # Entités Doctrine (Ouvrage, Auteur, Emprunt, etc.)
-├── Form/             # Formulaires Symfony
-├── Repository/       # Repositories Doctrine
-├── Security/         # Voters, authenticators
-│   └── Voter/       # OuvrageVoter, EmpruntVoter, etc.
-├── Service/          # Logique métier (ServiceReglesEmprunt, NotificationService)
-├── Validator/        # Contraintes personnalisées (ISBN, etc.)
-└── EventSubscriber/  # Écouteurs d'événements
+```bash
+# Donner les bonnes permissions
+chmod -R 777 var/
 ```
 
-### Principes
+## 📝 Licence
 
-- **Separation of Concerns** : contrôleurs fins, logique dans les services
-- **Dependency Injection** : autowiring Symfony
-- **Single Responsibility** : une classe = une responsabilité
-- **Voters** : centralisation des règles d'autorisation (pas de if/else dispersés)
+Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
 
-## Sécurité
+## 🤝 Contribution
 
-### Mesures implémentées
+Les contributions sont les bienvenues ! Pour contribuer :
 
-- **RBAC** : voters pour chaque action sensible (édition ouvrage, emprunt, etc.)
-- **CSRF Protection** : tokens sur tous les formulaires
-- **Rate Limiting** : sur les endpoints d'authentification et API
-- **Headers HTTP** : CSP, X-Frame-Options, HSTS
-- **Password Policy** : hachage bcrypt, cycle de vie, réinitialisation sécurisée
-- **Validation stricte** : contraintes sur ISBN, email, objets valeur
-- **Audit trail** : logs immuables (qui/quoi/quand) avec rétention 50 jours
+1. Forkez le projet
+2. Créez une branche (`git checkout -b feature/AmazingFeature`)
+3. Commitez vos changements (`git commit -m 'Add some AmazingFeature'`)
+4. Pushez vers la branche (`git push origin feature/AmazingFeature`)
+5. Ouvrez une Pull Request
 
-### Configuration de sécurité
+## 👥 Auteurs
 
-Voir `config/packages/security.yaml` pour le firewall et les access controls.
+- **Meersseman Gilles** - *Développement initial*
 
-## Licence
+## 📞 Support
 
-Ce projet est un exercice académique dans le cadre d'une formation Symfony.
+Pour toute question ou problème :
+- Ouvrez une issue sur GitHub
+- Consultez la documentation Symfony : https://symfony.com/doc
 
-## Contribution
 
-1. Fork le projet
-2. Créer une branche feature (`git checkout -b feature/AmazingFeature`)
-3. Commit (`git commit -m 'Add AmazingFeature'`)
-4. Push (`git push origin feature/AmazingFeature`)
-5. Ouvrir une Pull Request
+
 
