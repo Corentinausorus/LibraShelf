@@ -124,9 +124,9 @@ php bin/console doctrine:fixtures:load
 ### 6. Créer un utilisateur admin
 
 Ou utiliser les fixtures qui créent automatiquement :
-- Admin : `admin@example.org` / `admin123`
-- Librarian : `librarian@example.org` / `librarian123`
-- Member : `member@example.org` / `member123`
+- Admin : `admin@librashelf.local` / `admin123`
+- Librarian : `librarian1@librashelf.local` / `librarian123`
+- Member : utiliser un des emails générés (ex: voir en base) / `member123`
 
 ## Configuration
 

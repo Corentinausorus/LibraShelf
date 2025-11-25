@@ -27,8 +27,8 @@ class Ouvrage
     #[ORM\Column(type: Types::JSON, nullable: true)]
     private ?array $Langues = null;
 
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
-    private ?\DateTimeImmutable $Année = null;
+    #[ORM\Column(name: 'Année', type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $annee = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $Resume = null;
@@ -110,14 +110,14 @@ class Ouvrage
         return $this;
     }
 
-    public function getAnnée(): ?\DateTime
+    public function getAnnee(): ?\DateTimeImmutable
     {
-        return $this->Année;
+        return $this->annee;
     }
 
-    public function setAnnée(?\DateTime $Année): static
+    public function setAnnee(?\DateTimeImmutable $annee): static
     {
-        $this->Année = $Année;
+        $this->annee = $annee;
 
         return $this;
     }

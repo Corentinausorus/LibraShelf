@@ -1,48 +1,272 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Liste des ouvrages{% endblock %}
+{% block title %}Catalogue des ouvrages{% endblock %}
 
 {% block body %}
-{% if app.user %}
-    <div class="mb-3">
-        Connecté en tant que {{ app.user.userIdentifier }} :
-        {{ app.user.getRoles()|join(', ') }} <br>
-        <a href="{{ path('app_logout') }}">Logout</a>
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1><i class="bi bi-book"></i> Catalogue des ouvrages</h1>
+        </div>
+        {% if is_granted('ROLE_LIBRARIAN') %}
+        <div class="col text-end">
+            <a href="{{ path('librarian_ouvrage_new') }}" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i> Ajouter un ouvrage
+            </a>
+        </div>
+        {% endif %}
     </div>
-{% endif %}
-<h1>Liste des ouvrages</h1>
-<a href="{{ path('ouvrage_liste') }}">Ajouter un nouvel ouvrage</a>
 
-<table>
-    <thead>
-        <tr>
-            <th>Titre</th>
-            <th>ISBN</th>
-            <th>Auteurs</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-    {% for ouvrage in ouvrages %}
-        <tr>
-            <td>{{ ouvrage.titre }}</td>
-            <td>{{ ouvrage.ISBN }}</td>
-            <td>
-                {% for auteur in ouvrage.auteurs %}
-                    {{ auteur.nom }}{% if not loop.last %}, {% endif %}
-                {% endfor %}
-            </td>
-            {#}
-            <td>
-                <a href="{{ path('app_ouvrage_show', {'id': ouvrage.id}) }}">Voir</a>
-                <a href="{{ path('app_ouvrage_edit', {'id': ouvrage.id}) }}">Modifier</a>
-                <form method="post" action="{{ path('app_ouvrage_delete', {'id': ouvrage.id}) }}" style="display:inline;">
-                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ ouvrage.id) }}">
-                    <button type="submit">Supprimer</button>
-                </form>
-            </td>#}
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
+    {# Formulaire de recherche #}
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-funnel"></i> Recherche et filtres</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" action="{{ path('ouvrage_liste') }}" class="row g-3">
+                {# Recherche par titre #}
+                <div class="col-md-6">
+                    <label for="titre" class="form-label">Titre</label>
+                    <input type="text" 
+                           class="form-control" 
+                           id="titre" 
+                           name="titre" 
+                           placeholder="Rechercher par titre..."
+                           value="{{ filters.titre }}">
+                </div>
+
+                {# Filtre par catégorie #}
+                <div class="col-md-6">
+                    <label for="categorie" class="form-label">Catégorie</label>
+                    <select class="form-select" id="categorie" name="categorie">
+                        <option value="">Toutes les catégories</option>
+                        {% for categorie in categories %}
+                            <option value="{{ categorie.id }}" {% if filters.categorie == categorie.id %}selected{% endif %}>
+                                {{ categorie.nom }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                {# Filtre par langue #}
+                <div class="col-md-4">
+                    <label for="langue" class="form-label">Langue</label>
+                    <select class="form-select" id="langue" name="langue">
+                        <option value="">Toutes les langues</option>
+                        {% for langue in langues %}
+                            <option value="{{ langue }}" {% if filters.langue == langue %}selected{% endif %}>
+                                {{ langue }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                {# Filtre par année #}
+                <div class="col-md-4">
+                    <label for="annee" class="form-label">Année de publication</label>
+                    <select class="form-select" id="annee" name="annee">
+                        <option value="">Toutes les années</option>
+                        {% for annee in annees %}
+                            <option value="{{ annee }}" {% if filters.annee == annee %}selected{% endif %}>
+                                {{ annee }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                {# Filtre par disponibilité #}
+                <div class="col-md-4">
+                    <label for="disponible" class="form-label">Disponibilité</label>
+                    <select class="form-select" id="disponible" name="disponible">
+                        <option value="">Tous</option>
+                        <option value="1" {% if filters.disponible == '1' %}selected{% endif %}>Disponible</option>
+                        <option value="0" {% if filters.disponible == '0' %}selected{% endif %}>Non disponible</option>
+                    </select>
+                </div>
+
+                {# Boutons d'action #}
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i> Rechercher
+                    </button>
+                    <a href="{{ path('ouvrage_liste') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-clockwise"></i> Réinitialiser
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {# Résultats #}
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Résultats</h5>
+            <span class="badge bg-secondary">{{ resultCount }} ouvrage(s)</span>
+        </div>
+        <div class="card-body">
+            {% if ouvrages is empty %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Aucun ouvrage trouvé avec ces critères.
+                </div>
+            {% else %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Titre</th>
+                                <th>Auteur(s)</th>
+                                <th>Catégories</th>
+                                <th>Langue(s)</th>
+                                <th>Année</th>
+                                <th>ISBN</th>
+                                <th>Disponibilité</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for ouvrage in ouvrages %}
+                            <tr>
+                                <td>
+                                    <strong>{{ ouvrage.titre }}</strong>
+                                    {% if ouvrage.resume %}
+                                        <br><small class="text-muted">{{ ouvrage.resume|length > 80 ? ouvrage.resume|slice(0, 80) ~ '...' : ouvrage.resume }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% for auteur in ouvrage.auteurs %}
+                                        {{ auteur.nom }}{% if not loop.last %}, {% endif %}
+                                    {% else %}
+                                        <em class="text-muted">Non renseigné</em>
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    {% for categorie in ouvrage.categories %}
+                                        <span class="badge bg-info">{{ categorie.nom }}</span>
+                                    {% else %}
+                                        <em class="text-muted">-</em>
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    {% if ouvrage.langues %}
+                                        {{ ouvrage.langues|join(', ') }}
+                                    {% else %}
+                                        <em class="text-muted">-</em>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if ouvrage.année %}
+                                        {{ ouvrage.année|date('Y') }}
+                                    {% else %}
+                                        <em class="text-muted">-</em>
+                                    {% endif %}
+                                </td>
+                                <td>{{ ouvrage.ISBN }}</td>
+                                <td>
+                                    {% set disponibles = 0 %}
+                                    {% for exemplaire in ouvrage.exemplaires %}
+                                        {% if exemplaire.disponible %}
+                                            {% set disponibles = disponibles + 1 %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if disponibles > 0 %}
+                                        <span class="badge bg-success">{{ disponibles }} dispo.</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Indisponible</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="#" class="btn btn-outline-info" title="Voir détails" data-bs-toggle="modal" data-bs-target="#detailModal{{ ouvrage.id }}">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        {% if is_granted('ROLE_LIBRARIAN') %}
+                                            <a href="{{ path('librarian_ouvrage_edit', {'id': ouvrage.id}) }}" class="btn btn-outline-secondary" title="Modifier">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        {% endif %}
+                                        {% if is_granted('ROLE_MEMBER') and disponibles > 0 %}
+                                            <button class="btn btn-outline-primary" title="Réserver">
+                                                <i class="bi bi-bookmark"></i>
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{# Modals de détails (optionnel) #}
+{% for ouvrage in ouvrages %}
+<div class="modal fade" id="detailModal{{ ouvrage.id }}" tabindex="-1" aria-labelledby="detailModalLabel{{ ouvrage.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailModalLabel{{ ouvrage.id }}">{{ ouvrage.titre }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <dl class="row">
+                    <dt class="col-sm-3">ISBN</dt>
+                    <dd class="col-sm-9">{{ ouvrage.ISBN }}</dd>
+
+                    <dt class="col-sm-3">Auteur(s)</dt>
+                    <dd class="col-sm-9">
+                        {% for auteur in ouvrage.auteurs %}
+                            {{ auteur.nom }}{% if not loop.last %}, {% endif %}
+                        {% endfor %}
+                    </dd>
+
+                    <dt class="col-sm-3">Éditeur</dt>
+                    <dd class="col-sm-9">{{ ouvrage.editeur ? ouvrage.editeur.nom : '-' }}</dd>
+
+                    <dt class="col-sm-3">Année</dt>
+                    <dd class="col-sm-9">{{ ouvrage.année ? ouvrage.année|date('Y') : '-' }}</dd>
+
+                    <dt class="col-sm-3">Langue(s)</dt>
+                    <dd class="col-sm-9">{{ ouvrage.langues ? ouvrage.langues|join(', ') : '-' }}</dd>
+
+                    <dt class="col-sm-3">Catégories</dt>
+                    <dd class="col-sm-9">
+                        {% for categorie in ouvrage.categories %}
+                            <span class="badge bg-info">{{ categorie.nom }}</span>
+                        {% endfor %}
+                    </dd>
+
+                    <dt class="col-sm-3">Résumé</dt>
+                    <dd class="col-sm-9">{{ ouvrage.resume ?: 'Non renseigné' }}</dd>
+
+                    <dt class="col-sm-3">Exemplaires</dt>
+                    <dd class="col-sm-9">
+                        <ul class="list-unstyled">
+                            {% for exemplaire in ouvrage.exemplaires %}
+                                <li>
+                                    Cote: {{ exemplaire.cote }} - 
+                                    État: {{ exemplaire.etat }} - 
+                                    {% if exemplaire.disponible %}
+                                        <span class="badge bg-success">Disponible</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Emprunté</span>
+                                    {% endif %}
+                                </li>
+                            {% else %}
+                                <em>Aucun exemplaire</em>
+                            {% endfor %}
+                        </ul>
+                    </dd>
+                </dl>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
 {% endblock %}

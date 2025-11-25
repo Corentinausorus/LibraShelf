@@ -4,9 +4,11 @@ namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Repository\OuvrageRepository;
 use App\Repository\ReservationRepository;
+use App\Repository\CategorieRepository;
 use App\Entity\Exemplaires;
 use App\Entity\Reservation;
 use Doctrine\ORM\EntityManagerInterface;
@@ -23,11 +25,55 @@ final class MemberController extends AbstractController
 
     #[Route('/member/ouvrages', name: 'member_ouvrages')]
     #[IsGranted('ROLE_MEMBER')]
-    public function Ouvrages(OuvrageRepository $ouvrageRepository): Response
+    public function Ouvrages(
+        Request $request,
+        OuvrageRepository $ouvrageRepository,
+        ReservationRepository $reservationRepository,
+        \App\Repository\CategorieRepository $categorieRepository
+    ): Response
     {
-        // Liste des livres disponibles
+        // Récupération des filtres depuis la requête
+        $filters = [
+            'titre' => $request->query->get('titre', ''),
+            'categorie' => $request->query->get('categorie', ''),
+            'langue' => $request->query->get('langue', ''),
+            'annee' => $request->query->get('annee', ''),
+            'disponible' => $request->query->get('disponible', ''),
+        ];
+
+        $hasFilters = array_filter($filters, fn($v) => $v !== '');
+
+        if ($hasFilters) {
+            $ouvrages = $ouvrageRepository->searchWithFilters($filters);
+        } else {
+            $ouvrages = $ouvrageRepository->findAll();
+        }
+
+        // données pour les filtres
+        $categories = $categorieRepository->findAll();
+        $langues = $ouvrageRepository->findAllLangues();
+        $annees = $ouvrageRepository->findAllAnnees();
+
+        // réservations utilisateur (ids d'ouvrages déjà réservés)
+        $reservedOuvrageIds = [];
+        if ($this->getUser()) {
+            $userReservations = $reservationRepository->findBy(['user' => $this->getUser()]);
+            foreach ($userReservations as $r) {
+                $ex = $r->getExemplaire();
+                if ($ex && $ex->getOuvrage()) {
+                    $reservedOuvrageIds[] = $ex->getOuvrage()->getId();
+                }
+            }
+        }
+
         return $this->render('member/ouvrages.html.twig', [
-            'ouvrages' => $ouvrageRepository->findAll(),
+            'ouvrages' => $ouvrages,
+            'categories' => $categories,
+            'langues' => $langues,
+            'annees' => $annees,
+            'filters' => $filters,
+            'resultCount' => count($ouvrages),
+            'reservedOuvrageIds' => $reservedOuvrageIds,
         ]);
     }
 

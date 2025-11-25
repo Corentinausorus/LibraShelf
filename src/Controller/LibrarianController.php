@@ -8,6 +8,7 @@ use App\Form\ExemplaireType;
 use App\Form\OuvrageType;
 use App\Repository\ExemplairesRepository;
 use App\Repository\OuvrageRepository;
+use App\Repository\ReservationRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -45,6 +46,15 @@ final class LibrarianController extends AbstractController
         return $this->render('librarian/members.html.twig');
     }
 
+    #[Route('/librarian/reservations', name: 'librarian_reservations')]
+    #[IsGranted('ROLE_LIBRARIAN')]
+    public function manageReservations(ReservationRepository $reservationRepository): Response
+    {
+        return $this->render('librarian/reservations.html.twig', [
+            'reservations' => $reservationRepository->findAll(),
+        ]);
+    }
+
     #[Route('/librarian/ouvrages', name: 'librarian_ouvrages')]
     #[IsGranted('ROLE_LIBRARIAN')]
     public function listOuvrages(OuvrageRepository $ouvrageRepository): Response
@@ -67,8 +77,8 @@ final class LibrarianController extends AbstractController
             if ($form->has('Langues') && $form->get('Langues')->getData()) {
                 $ouvrage->setLangues($form->get('Langues')->getData());
             }
-            if ($form->has('annee') && $form->get('annee')->getData()) {
-                $ouvrage->setAnnée($form->get('annee')->getData());
+                if ($form->has('annee') && $form->get('annee')->getData()) {
+                    $ouvrage->setAnnee($form->get('annee')->getData());
             }
             
             $ouvrage->setCreatedBy($this->getUser());
@@ -96,8 +106,8 @@ final class LibrarianController extends AbstractController
         if ($ouvrage->getLangues()) {
             $form->get('Langues')->setData($ouvrage->getLangues());
         }
-        if ($ouvrage->getAnnée()) {
-            $form->get('annee')->setData($ouvrage->getAnnée());
+        if ($ouvrage->getAnnee()) {
+            $form->get('annee')->setData($ouvrage->getAnnee());
         }
         
         $form->handleRequest($request);
@@ -108,7 +118,7 @@ final class LibrarianController extends AbstractController
                 $ouvrage->setLangues($form->get('Langues')->getData());
             }
             if ($form->has('annee')) {
-                $ouvrage->setAnnée($form->get('annee')->getData());
+                $ouvrage->setAnnee($form->get('annee')->getData());
             }
             
             $em->flush();
