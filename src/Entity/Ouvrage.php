@@ -63,6 +63,16 @@ class Ouvrage
     //#[ORM\JoinTable(name: 'tags_ouvrage')]
     private Collection $tags;
 
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?User $createdBy = null;
+
+    /**
+     * @var Collection<int, Reservation>
+     */
+    #[ORM\OneToMany(targetEntity: Reservation::class, mappedBy: 'ouvrage')]
+    private Collection $reservations;
+
     public function __construct()
     {
         $this->auteurs = new ArrayCollection();
@@ -134,23 +144,16 @@ class Ouvrage
 
         return $this;
     }
-    #[ORM\ManyToOne(inversedBy: 'ouvrages')]
-    private ?User $createdBy = null;
-
-    /**
-     * @var Collection<int, Reservation>
-     */
-    #[ORM\OneToMany(targetEntity: Reservation::class, mappedBy: 'ouvrage')]
-    private Collection $reservations;
 
     public function getCreatedBy(): ?User
     {
         return $this->createdBy;
     }
 
-    public function setCreatedBy(?User $user): self
+    public function setCreatedBy(?User $createdBy): static
     {
-        $this->createdBy = $user;
+        $this->createdBy = $createdBy;
+
         return $this;
     }
     public function addAuteur(Auteur $auteur): static

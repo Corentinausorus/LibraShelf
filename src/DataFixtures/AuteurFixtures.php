@@ -9,19 +9,27 @@ use Faker\Factory;
 
 class AuteurFixtures extends Fixture
 {
-    public const AUTEUR_REFERENCE = 'auteur_';
+    public const AUTEUR_REFERENCE_PREFIX = 'auteur_';
 
     public function load(ObjectManager $manager): void
     {
         $faker = Factory::create('fr_FR');
 
-        for ($i = 0; $i < 10; $i++) {
+        // Générer 200 auteurs réalistes
+        for ($i = 1; $i <= 200; $i++) {
             $auteur = new Auteur();
-            $auteur->setNom($faker->name());
+            $auteur->setPrenom($faker->firstName);
+            $auteur->setNom($faker->lastName);
+            
+            // Bio optionnelle (60% des auteurs ont une bio)
+            if ($faker->boolean(60)) {
+                $auteur->setBio($faker->text(300));
+            }
 
             $manager->persist($auteur);
-
-            $this->addReference(self::AUTEUR_REFERENCE . $i, $auteur);
+            
+            // Ajouter une référence pour pouvoir lier aux ouvrages dans OuvrageFixtures
+            $this->addReference(self::AUTEUR_REFERENCE_PREFIX . $i, $auteur);
         }
 
         $manager->flush();
