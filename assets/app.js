@@ -5,6 +5,14 @@ import './bootstrap.js';
  * This file will be included onto the page via the importmap() Twig function,
  * which should already be in your base.html.twig.
  */
+
+// Import Bootstrap CSS via Asset Mapper
+import 'bootstrap/dist/css/bootstrap.min.css';
+
+// Import Bootstrap JS (includes Popper.js)
+import 'bootstrap';
+
+// Import custom styles (after Bootstrap to override properly)
 import './styles/app.css';
 
-console.log('This log comes from assets/app.js - welcome to AssetMapper! 🎉');
+console.log('LibraShelf - Assets loaded via Asset Mapper 🎉');
