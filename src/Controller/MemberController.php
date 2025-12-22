@@ -30,8 +30,7 @@ final class MemberController extends AbstractController
         OuvrageRepository $ouvrageRepository,
         ReservationRepository $reservationRepository,
         \App\Repository\CategorieRepository $categorieRepository
-    ): Response
-    {
+    ): Response {
         // Récupération des filtres depuis la requête
         $filters = [
             'titre' => $request->query->get('titre', ''),
@@ -89,14 +88,29 @@ final class MemberController extends AbstractController
     #[IsGranted('ROLE_MEMBER')]
     public function myReservations(ReservationRepository $reservationRepository): Response
     {
-        // Mes réservations
-        return $this->render('member/reservations.html.twig',[
-            'reservations' => $reservationRepository->findBy(['user' => $this->getUser()]),
+        $user = $this->getUser();
+        $reservations = $reservationRepository->findBy(['user' => $user]);
+
+        // Calculer la position dans la file pour chaque réservation en attente
+        $queuePositions = [];
+        foreach ($reservations as $reservation) {
+            if ($reservation->getStatut() === 'en_attente' && $reservation->getOuvrage()) {
+                $position = $reservationRepository->getPositionInQueue(
+                    $reservation->getOuvrage(),
+                    $user
+                );
+                $queuePositions[$reservation->getId()] = $position;
+            }
+        }
+
+        return $this->render('member/reservations.html.twig', [
+            'reservations' => $reservations,
+            'queuePositions' => $queuePositions,
         ]);
     }
 
     #[Route('/exemplaire/{id}/reserve', name: 'member_reserve_exemplaire')]
-    public function reserve(Exemplaires $exemplaire,EntityManagerInterface $em): Response 
+    public function reserve(Exemplaires $exemplaire, EntityManagerInterface $em): Response
     {
 
         if (!$exemplaire->isDisponible()) {
@@ -109,7 +123,7 @@ final class MemberController extends AbstractController
         $reservation->setUser($this->getUser());
 
         // required non-nullable column
-        $reservation->setStatut('A venir chercher'); 
+        $reservation->setStatut('A venir chercher');
 
         $reservation->setExemplaire($exemplaire);
 
@@ -187,7 +201,7 @@ final class MemberController extends AbstractController
         $reservations = $user ? $reservationRepo->findBy(['user' => $user, 'active' => true]) : [];
 
         // map reservations to ouvrage IDs (adjust accessors to your model)
-        $reservedOuvrageIds = array_map(function($r) {
+        $reservedOuvrageIds = array_map(function ($r) {
             return $r->getExemplaire()->getOuvrage()->getId();
         }, $reservations);
 
