@@ -15,141 +15,193 @@
     {% block stylesheets %}{% endblock %}
 </head>
 <body>
-    {# MENU DE NAVIGATION PRINCIPAL #}
-    {# Visible sur TOUTES les pages de l'application #}
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
-        <div class="container-fluid">
-            {# Logo - Retour à l'accueil #}
-            <a class="navbar-brand" href="{{ path('app_home') }}">
-                <i class="bi bi-book"></i> LibraShelf
-            </a>
-            
-            {# Bouton hamburger pour mobile #}
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                {# Menu principal - Adapté au rôle #}
-                <ul class="navbar-nav me-auto">
-                    {% if is_granted('ROLE_ADMIN') %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ path('admin_dashboard') }}">
-                                <i class="bi bi-shield-check"></i> Administration
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ path('admin_users') }}">
-                                <i class="bi bi-people"></i> Utilisateurs
-                            </a>
-                        </li>
-                    {% endif %}
-                    
-                    {% if is_granted('ROLE_LIBRARIAN') %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ path('librarian_dashboard') }}">
-                                <i class="bi bi-speedometer2"></i> Dashboard
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ path('librarian_catalog') }}">
-                                <i class="bi bi-book-half"></i> Catalogue
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ path('librarian_loans') }}">
-                                <i class="bi bi-arrow-left-right"></i> Emprunts
-                            </a>
-                        </li>
-                    {% endif %}
-                    
-                    {% if is_granted('ROLE_MEMBER') %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ path('member_ouvrages') }}">
-                                <i class="bi bi-search"></i> Rechercher
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ path('member_loans') }}">
-                                <i class="bi bi-journal-bookmark"></i> Mes emprunts
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ path('member_reservations') }}">
-                                <i class="bi bi-bookmark-star"></i> Mes réservations
-                            </a>
-                        </li>
-                    {% endif %}
-                </ul>
-                
-                {# Menu utilisateur (droite) #}
-                <ul class="navbar-nav">
-                    {% if app.user %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" 
-                               data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-person-circle"></i> {{ app.user.nom }}
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                                <li>
-                                    <a class="dropdown-item" href="{{ path('app_profile') }}">
-                                        Profil
-                                    </a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <a class="dropdown-item" href="{{ path('app_logout') }}">
-                                        <i class="bi bi-box-arrow-right"></i> Se déconnecter
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ path('app_login') }}">
-                                <i class="bi bi-box-arrow-in-right"></i> Se connecter
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ path('app_register') }}">
-                                <i class="bi bi-person-plus"></i> S'inscrire
-                            </a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
-    </nav>
+    {# ============================================
+       ACCESSIBILITÉ - Lien d'évitement (Skip Link)
+       Permet aux utilisateurs de clavier de sauter la navigation
+       ============================================ #}
+    <a href="#main-content" class="skip-link visually-hidden-focusable">
+        Aller au contenu principal
+    </a>
 
-    {# CONTENU DES PAGES #}
-    {% block body %}{% endblock %}
+    {# ============================================
+       HEADER - Navigation principale
+       ============================================ #}
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top" 
+             role="navigation" 
+             aria-label="Navigation principale">
+            <div class="container-fluid">
+                {# Logo - Retour à l'accueil #}
+                <a class="navbar-brand" href="{{ path('app_home') }}" aria-label="LibraShelf - Retour à l'accueil">
+                    <i class="bi bi-book" aria-hidden="true"></i>
+                    <span>LibraShelf</span>
+                </a>
+                
+                {# Bouton hamburger pour mobile - Accessibilité améliorée #}
+                <button class="navbar-toggler" 
+                        type="button" 
+                        data-bs-toggle="collapse" 
+                        data-bs-target="#navbarNav"
+                        aria-controls="navbarNav"
+                        aria-expanded="false"
+                        aria-label="Ouvrir le menu de navigation">
+                    <span class="navbar-toggler-icon" aria-hidden="true"></span>
+                </button>
+                
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    {# Menu principal - Adapté au rôle #}
+                    <ul class="navbar-nav me-auto" role="menubar">
+                        {% if is_granted('ROLE_ADMIN') %}
+                            <li class="nav-item" role="none">
+                                <a class="nav-link" href="{{ path('admin_dashboard') }}" role="menuitem">
+                                    <i class="bi bi-shield-check" aria-hidden="true"></i>
+                                    <span>Administration</span>
+                                </a>
+                            </li>
+                            <li class="nav-item" role="none">
+                                <a class="nav-link" href="{{ path('admin_users') }}" role="menuitem">
+                                    <i class="bi bi-people" aria-hidden="true"></i>
+                                    <span>Utilisateurs</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                        
+                        {% if is_granted('ROLE_LIBRARIAN') %}
+                            <li class="nav-item" role="none">
+                                <a class="nav-link" href="{{ path('librarian_dashboard') }}" role="menuitem">
+                                    <i class="bi bi-speedometer2" aria-hidden="true"></i>
+                                    <span>Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item" role="none">
+                                <a class="nav-link" href="{{ path('librarian_catalog') }}" role="menuitem">
+                                    <i class="bi bi-book-half" aria-hidden="true"></i>
+                                    <span>Catalogue</span>
+                                </a>
+                            </li>
+                            <li class="nav-item" role="none">
+                                <a class="nav-link" href="{{ path('librarian_loans') }}" role="menuitem">
+                                    <i class="bi bi-arrow-left-right" aria-hidden="true"></i>
+                                    <span>Emprunts</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                        
+                        {% if is_granted('ROLE_MEMBER') %}
+                            <li class="nav-item" role="none">
+                                <a class="nav-link" href="{{ path('member_ouvrages') }}" role="menuitem">
+                                    <i class="bi bi-search" aria-hidden="true"></i>
+                                    <span>Rechercher</span>
+                                </a>
+                            </li>
+                            <li class="nav-item" role="none">
+                                <a class="nav-link" href="{{ path('member_loans') }}" role="menuitem">
+                                    <i class="bi bi-journal-bookmark" aria-hidden="true"></i>
+                                    <span>Mes emprunts</span>
+                                </a>
+                            </li>
+                            <li class="nav-item" role="none">
+                                <a class="nav-link" href="{{ path('member_reservations') }}" role="menuitem">
+                                    <i class="bi bi-bookmark-star" aria-hidden="true"></i>
+                                    <span>Mes réservations</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                    
+                    {# Menu utilisateur (droite) #}
+                    <ul class="navbar-nav" role="menubar" aria-label="Menu utilisateur">
+                        {% if app.user %}
+                            <li class="nav-item dropdown" role="none">
+                                <a class="nav-link dropdown-toggle" 
+                                   href="#" 
+                                   id="userDropdown" 
+                                   role="menuitem"
+                                   aria-haspopup="true"
+                                   data-bs-toggle="dropdown" 
+                                   aria-expanded="false">
+                                    <i class="bi bi-person-circle" aria-hidden="true"></i>
+                                    <span>{{ app.user.nom }}</span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" 
+                                    aria-labelledby="userDropdown"
+                                    role="menu">
+                                    <li role="none">
+                                        <a class="dropdown-item" href="{{ path('app_profile') }}" role="menuitem">
+                                            <i class="bi bi-person" aria-hidden="true"></i>
+                                            Profil
+                                        </a>
+                                    </li>
+                                    <li role="none"><hr class="dropdown-divider" aria-hidden="true"></li>
+                                    <li role="none">
+                                        <a class="dropdown-item" href="{{ path('app_logout') }}" role="menuitem">
+                                            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                                            Se déconnecter
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        {% else %}
+                            <li class="nav-item" role="none">
+                                <a class="nav-link" href="{{ path('app_login') }}" role="menuitem">
+                                    <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
+                                    <span>Se connecter</span>
+                                </a>
+                            </li>
+                            <li class="nav-item" role="none">
+                                <a class="nav-link" href="{{ path('app_register') }}" role="menuitem">
+                                    <i class="bi bi-person-plus" aria-hidden="true"></i>
+                                    <span>S'inscrire</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    {# ============================================
+       CONTENU PRINCIPAL - Landmark main
+       ============================================ #}
+    <main id="main-content" role="main" tabindex="-1">
+        {% block body %}{% endblock %}
+    </main>
     
     {% block javascripts %}
         {# Bootstrap JS is now loaded via Asset Mapper in app.js #}
     {% endblock %}
 
-    {# Footer moderne #}
-    <footer class="site-footer">
+    {# ============================================
+       FOOTER - Pied de page
+       ============================================ #}
+    <footer class="site-footer" role="contentinfo">
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
                     <span class="footer-brand">
-                        <i class="bi bi-book-fill"></i> LibraShelf
+                        <i class="bi bi-book-fill" aria-hidden="true"></i>
+                        <span>LibraShelf</span>
                     </span>
                     <span class="footer-copyright">© {{ "now"|date("Y") }} - Système de gestion de bibliothèque</span>
                 </div>
                 <div class="col-md-6 text-center text-md-end">
                     {% if app.user %}
                         <span class="footer-user">
-                            <i class="bi bi-person-circle"></i> {{ app.user.userIdentifier }}
+                            <i class="bi bi-person-circle" aria-hidden="true"></i>
+                            <span>{{ app.user.userIdentifier }}</span>
                             <span class="badge bg-primary ms-2">{{ app.user.getRoles()|first|replace({'ROLE_': ''}) }}</span>
                         </span>
-                        <a href="{{ path('app_logout') }}" class="btn btn-sm btn-outline-light ms-3">
-                            <i class="bi bi-box-arrow-right"></i> Déconnexion
+                        <a href="{{ path('app_logout') }}" 
+                           class="btn btn-sm btn-outline-light ms-3"
+                           aria-label="Se déconnecter de {{ app.user.userIdentifier }}">
+                            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                            <span>Déconnexion</span>
                         </a>
                     {% else %}
                         <a href="{{ path('app_login') }}" class="btn btn-sm btn-primary">
-                            <i class="bi bi-box-arrow-in-right"></i> Connexion
+                            <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
+                            <span>Connexion</span>
                         </a>
                     {% endif %}
                 </div>
