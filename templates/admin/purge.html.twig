@@ -1,0 +1,235 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Purge des données - Administration{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ path('admin_dashboard') }}">Administration</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Purge des données</li>
+                </ol>
+            </nav>
+            
+            <h1 class="mb-4">
+                <i class="bi bi-trash3" aria-hidden="true"></i> Purge des données
+            </h1>
+
+            {# Messages flash #}
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ label }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+
+            <div class="alert alert-warning" role="alert">
+                <h5 class="alert-heading">
+                    <i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Attention
+                </h5>
+                <p class="mb-0">
+                    Cette action est <strong>irréversible</strong>. Les données supprimées ne pourront pas être récupérées.
+                    Il est recommandé d'effectuer une sauvegarde avant toute purge.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        {# Formulaire de configuration #}
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-gear" aria-hidden="true"></i> Configuration de la purge
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ path('admin_purge_preview') }}" id="previewForm">
+                        <div class="mb-3">
+                            <label for="emprunts" class="form-label">
+                                <i class="bi bi-book" aria-hidden="true"></i>
+                                Emprunts retournés (mois)
+                            </label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="emprunts" 
+                                   name="emprunts" 
+                                   value="{{ defaults.emprunts }}"
+                                   min="1" 
+                                   max="120"
+                                   aria-describedby="empruntsHelp">
+                            <div id="empruntsHelp" class="form-text">
+                                Supprimer les emprunts retournés depuis plus de X mois
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="reservations" class="form-label">
+                                <i class="bi bi-bookmark" aria-hidden="true"></i>
+                                Réservations terminées (mois)
+                            </label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="reservations" 
+                                   name="reservations" 
+                                   value="{{ defaults.reservations }}"
+                                   min="1" 
+                                   max="120"
+                                   aria-describedby="reservationsHelp">
+                            <div id="reservationsHelp" class="form-text">
+                                Supprimer les réservations terminées/annulées depuis plus de X mois
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notifications" class="form-label">
+                                <i class="bi bi-bell" aria-hidden="true"></i>
+                                Notifications (jours)
+                            </label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="notifications" 
+                                   name="notifications" 
+                                   value="{{ defaults.notifications }}"
+                                   min="1" 
+                                   max="365"
+                                   aria-describedby="notificationsHelp">
+                            <div id="notificationsHelp" class="form-text">
+                                Supprimer les notifications créées depuis plus de X jours
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-secondary w-100">
+                            <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+                            Actualiser l'aperçu
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {# Aperçu et exécution #}
+        <div class="col-md-7">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-eye" aria-hidden="true"></i> Aperçu des données à purger
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-hover" aria-label="Aperçu des données à purger">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">Type de données</th>
+                                <th scope="col">Date limite</th>
+                                <th scope="col" class="text-end">Éléments à supprimer</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <i class="bi bi-book text-primary" aria-hidden="true"></i>
+                                    Emprunts retournés
+                                </td>
+                                <td>
+                                    <small class="text-muted">Avant le {{ preview.emprunt_cutoff|date('d/m/Y') }}</small>
+                                </td>
+                                <td class="text-end">
+                                    <span class="badge bg-{{ preview.emprunts > 0 ? 'warning' : 'success' }} fs-6">
+                                        {{ preview.emprunts }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <i class="bi bi-bookmark text-info" aria-hidden="true"></i>
+                                    Réservations terminées
+                                </td>
+                                <td>
+                                    <small class="text-muted">Avant le {{ preview.reservation_cutoff|date('d/m/Y') }}</small>
+                                </td>
+                                <td class="text-end">
+                                    <span class="badge bg-{{ preview.reservations > 0 ? 'warning' : 'success' }} fs-6">
+                                        {{ preview.reservations }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <i class="bi bi-bell text-secondary" aria-hidden="true"></i>
+                                    Notifications
+                                </td>
+                                <td>
+                                    <small class="text-muted">Avant le {{ preview.notification_cutoff|date('d/m/Y') }}</small>
+                                </td>
+                                <td class="text-end">
+                                    <span class="badge bg-{{ preview.notifications > 0 ? 'warning' : 'success' }} fs-6">
+                                        {{ preview.notifications }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr class="fw-bold">
+                                <td colspan="2">Total</td>
+                                <td class="text-end">
+                                    {% set total = preview.emprunts + preview.reservations + preview.notifications %}
+                                    <span class="badge bg-{{ total > 0 ? 'danger' : 'success' }} fs-5">
+                                        {{ total }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    {% set total = preview.emprunts + preview.reservations + preview.notifications %}
+                    
+                    {% if total > 0 %}
+                        <hr>
+                        <form method="post" action="{{ path('admin_purge_execute') }}" 
+                              onsubmit="return confirm('⚠️ ATTENTION !\n\nVous êtes sur le point de supprimer définitivement {{ total }} éléments.\n\nCette action est irréversible.\n\nÊtes-vous sûr de vouloir continuer ?');">
+                            <input type="hidden" name="_token" value="{{ csrf_token('purge_data') }}">
+                            <input type="hidden" name="emprunts" value="{{ defaults.emprunts }}">
+                            <input type="hidden" name="reservations" value="{{ defaults.reservations }}">
+                            <input type="hidden" name="notifications" value="{{ defaults.notifications }}">
+                            
+                            <button type="submit" class="btn btn-danger btn-lg w-100">
+                                <i class="bi bi-trash3" aria-hidden="true"></i>
+                                Exécuter la purge ({{ total }} éléments)
+                            </button>
+                        </form>
+                    {% else %}
+                        <div class="alert alert-success mb-0" role="alert">
+                            <i class="bi bi-check-circle" aria-hidden="true"></i>
+                            Aucune donnée à purger avec les critères actuels.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# Commande console #}
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-terminal" aria-hidden="true"></i> Commande console
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-2">Vous pouvez aussi utiliser la commande console :</p>
+                    <code class="d-block bg-dark text-light p-2 rounded">
+                        php bin/console app:purge-data --dry-run
+                    </code>
+                    <p class="text-muted small mt-2 mb-0">
+                        Utilisez <code>--dry-run</code> pour un aperçu sans suppression.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
