@@ -15,7 +15,10 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
-#[UniqueEntity(fields: ['email'], message: 'Cette adresse e-mail est déjà utilisée.')]
+#[UniqueEntity(
+    fields: ['email'], 
+    message: 'Cette adresse e-mail est déjà utilisée.'
+)]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -24,8 +27,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 180, unique: true)]
-    #[Assert\NotBlank]
-    #[Assert\Email]
+    #[Assert\NotBlank(message: 'L\'adresse e-mail ne peut pas être vide')]
+    #[Assert\Email(
+        message: 'L\'adresse e-mail "{{ value }}" n\'est pas valide',
+        mode: 'strict'
+    )]
+    #[Assert\Length(
+        max: 180,
+        maxMessage: 'L\'adresse e-mail ne peut pas dépasser {{ limit }} caractères'
+    )]
     private string $email;
 
     #[ORM\Column]
@@ -41,6 +51,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private Collection $penalites;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: 'Le nom ne peut pas être vide')]
+    #[Assert\Length(
+        min: 2,
+        max: 255,
+        minMessage: 'Le nom doit contenir au moins {{ limit }} caractères',
+        maxMessage: 'Le nom ne peut pas dépasser {{ limit }} caractères'
+    )]
+    #[Assert\Regex(
+        pattern: '/^[a-zA-ZÀ-ÿ\s\-\']+$/u',
+        message: 'Le nom ne peut contenir que des lettres, espaces, tirets et apostrophes'
+    )]
     private ?string $nom = null;
 
     #[ORM\Column(type: 'string', length: 50, options: ["default" => "ROLE_MEMBER"])]

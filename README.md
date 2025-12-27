@@ -11,6 +11,18 @@ LibraShelf est une application web complète de gestion de bibliothèque dévelo
 - **Inscription avec codes d'invitation**
   - Membres : accès public sans code
   - Bibliothécaires : code d'invitation requis (configuré dans `.env`)
+- **Validation avancée du formulaire d'inscription**
+  - Validation de l'adresse e-mail (format strict)
+  - Contrainte de force du mot de passe (PasswordStrength)
+  - Confirmation du mot de passe
+  - Validation du nom (lettres, espaces, tirets uniquement)
+  - Acceptation des conditions d'utilisation obligatoire
+- **Exigences de mot de passe sécurisé**
+  - Minimum 8 caractères
+  - Au moins une majuscule et une minuscule
+  - Au moins un chiffre
+  - Au moins un caractère spécial
+  - Score de force minimum : moyen
 - **Système de rôles** : `ROLE_MEMBER`, `ROLE_LIBRARIAN`, `ROLE_ADMIN`
 - **Authentification sécurisée** avec hashage bcrypt des mots de passe
 - **Profil utilisateur** personnalisé
@@ -247,7 +259,7 @@ cd LibraShelf
 
 # 2. Installer les dépendances
 composer install
-
+symfony console importmap:install
 # 3. Configurer les variables d'environnement
 cp .env .env.local
 
@@ -349,21 +361,19 @@ L'application est maintenant accessible sur `http://localhost:8000`
 
 ### Authentification
 - **Hashage bcrypt** des mots de passe
+- **Politique de mot de passe forte** avec PasswordStrength Symfony
 - **Session sécurisée** avec CSRF
 - **Remember me** optionnel
-
-### Autorisation
-- **Contrôle d'accès** basé sur les rôles avec `#[IsGranted]`
-- **Hiérarchie des rôles** :
-  - `ROLE_MEMBER` : accès membre de base
-  - `ROLE_LIBRARIAN` : accès bibliothécaire (hérite de MEMBER)
-  - `ROLE_ADMIN` : accès administrateur (hérite de LIBRARIAN)
 
 ### Validation
 - **Protection CSRF** sur tous les formulaires
 - **Validation des données** côté serveur avec contraintes Doctrine
+  - Email : format strict validé
+  - Nom : caractères autorisés (lettres, espaces, tirets)
+  - Mot de passe : force minimale requise (medium)
 - **Contraintes d'unicité** : email, ISBN
 - **Validation personnalisée** selon les règles métier
+- **Messages d'erreur explicites** en français
 
 ### Bonnes pratiques
 - **Pas de données sensibles** dans le contrôle de version
@@ -531,6 +541,23 @@ Les contributions sont les bienvenues ! Pour contribuer :
 Pour toute question ou problème :
 - Ouvrez une issue sur GitHub
 - Consultez la documentation Symfony : https://symfony.com/doc
+
+### Réinitialisation complète de la base de données (développement)
+
+Si la base de données est corrompue ou incohérente :
+
+```bash
+# Supprimer et recréer la base
+symfony console doctrine:database:drop --force
+symfony console doctrine:database:create
+symfony console doctrine:schema:create
+
+# Marquer les migrations comme exécutées
+symfony console doctrine:migrations:version --add --all --no-interaction
+
+# Vérifier
+symfony console doctrine:schema:validate
+```
 
 
 
