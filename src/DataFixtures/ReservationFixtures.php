@@ -5,19 +5,17 @@ namespace App\DataFixtures;
 use App\Entity\Reservation;
 use App\Entity\Ouvrage;
 use App\Entity\User;
+use App\Enum\StatutReservation;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 use Faker\Factory;
 
-class ReservationFixtures extends Fixture
+class ReservationFixtures extends Fixture implements DependentFixtureInterface
 {
     public function load(ObjectManager $manager): void
     {
         $faker = Factory::create('fr_FR');
-        
-        // Statuts possibles pour une réservation
-        $statuts = ['en_attente', 'disponible', 'annulee', 'expiree'];
         
         // Récupérer les membres et ouvrages
         $userRepository = $manager->getRepository(User::class);
@@ -48,9 +46,24 @@ class ReservationFixtures extends Fixture
             $creationDate = $faker->dateTimeBetween('-1 month', 'now');
             $reservation->setCreationDate(\DateTimeImmutable::createFromMutable($creationDate));
             
-            // Statut aléatoire (majorité en attente)
-            $statut = $faker->randomElement(['en_attente', 'en_attente', 'en_attente', 'disponible', 'annulee']);
+            // Statut aléatoire avec pondération (majorité en attente)
+            $statuts = [
+                StatutReservation::EN_ATTENTE,
+                StatutReservation::EN_ATTENTE,
+                StatutReservation::EN_ATTENTE,
+                StatutReservation::A_RECUPERER,
+                StatutReservation::DISPONIBLE,
+                StatutReservation::ANNULEE,
+                StatutReservation::EXPIREE,
+            ];
+            $statut = $faker->randomElement($statuts);
             $reservation->setStatut($statut);
+            
+            // Si disponible ou à récupérer, ajouter notifiedAt
+            if (in_array($statut, [StatutReservation::DISPONIBLE, StatutReservation::A_RECUPERER])) {
+                $notifiedDate = $faker->dateTimeBetween($creationDate, 'now');
+                $reservation->setNotifiedAt(\DateTimeImmutable::createFromMutable($notifiedDate));
+            }
             
             // Exemplaire (null si en attente, sinon on pourrait en attribuer un)
             $reservation->setExemplaire(null);

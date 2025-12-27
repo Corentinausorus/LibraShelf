@@ -3,6 +3,7 @@
 namespace App\DataFixtures;
 
 use App\Entity\User;
+use App\Enum\Role;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 use Faker\Factory;
@@ -27,7 +28,7 @@ class UserFixtures extends Fixture
         $admin->setEmail('admin@librashelf.local');
         $admin->setNom('Admin Principal');
         $admin->setPassword($this->passwordHasher->hashPassword($admin, 'admin123'));
-        $admin->setRole('ROLE_ADMIN');
+        $admin->setRole(Role::ADMIN);
         $manager->persist($admin);
         $this->addReference('admin', $admin);
         
@@ -37,7 +38,7 @@ class UserFixtures extends Fixture
             $librarian->setEmail("librarian{$i}@librashelf.local");
             $librarian->setNom($faker->name());
             $librarian->setPassword($this->passwordHasher->hashPassword($librarian, 'librarian123'));
-            $librarian->setRole('ROLE_LIBRARIAN');
+            $librarian->setRole(Role::LIBRARIAN);
             $manager->persist($librarian);
             $this->addReference(self::LIBRARIAN_REFERENCE . $i, $librarian);
         }
@@ -48,7 +49,7 @@ class UserFixtures extends Fixture
             $member->setEmail($faker->unique()->safeEmail());
             $member->setNom($faker->name());
             $member->setPassword($this->passwordHasher->hashPassword($member, 'member123'));
-            $member->setRole('ROLE_MEMBER');
+            $member->setRole(Role::MEMBER);
             $manager->persist($member);
             $this->addReference(self::MEMBER_REFERENCE . $i, $member);
         }

@@ -2,6 +2,7 @@
 
 namespace App\Command;
 
+use App\Enum\StatutEmprunt;
 use App\Repository\EmpruntRepository;
 use App\Service\NotificationService;
 use App\Service\ServiceNotification;
@@ -40,7 +41,7 @@ class CommandeEnvoiRappelEmprunt extends Command
             ->andWhere('e.status = :status')
             ->setParameter('startDate', $dateMinus3->setTime(0, 0))
             ->setParameter('endDate', $dateMinus3->setTime(23, 59, 59))
-            ->setParameter('status', 'en_cours')
+            ->setParameter('status', StatutEmprunt::EN_COURS)
             ->getQuery()
             ->getResult();
 
@@ -60,7 +61,7 @@ class CommandeEnvoiRappelEmprunt extends Command
             ->andWhere('e.status = :status')
             ->setParameter('startDate', $today->setTime(0, 0))
             ->setParameter('endDate', $today->setTime(23, 59, 59))
-            ->setParameter('status', 'en_cours')
+            ->setParameter('status', StatutEmprunt::EN_COURS)
             ->getQuery()
             ->getResult();
 
@@ -81,7 +82,7 @@ class CommandeEnvoiRappelEmprunt extends Command
             ->andWhere('e.status IN (:statuses)')
             ->setParameter('startDate', $datePlus7->setTime(0, 0))
             ->setParameter('endDate', $datePlus7->setTime(23, 59, 59))
-            ->setParameter('statuses', ['en_cours', 'en_retard'])
+            ->setParameter('statuses', [StatutEmprunt::EN_COURS, StatutEmprunt::EN_RETARD])
             ->getQuery()
             ->getResult();
 

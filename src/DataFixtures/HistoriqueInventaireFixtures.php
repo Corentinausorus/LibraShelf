@@ -10,18 +10,11 @@ use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 use Faker\Factory;
 
-class HistoriqueInventaireFixtures extends Fixture
+class HistoriqueInventaireFixtures extends Fixture implements DependentFixtureInterface
 {
     public function load(ObjectManager $manager): void
     {
         $faker = Factory::create('fr_FR');
-        
-        // Types de changements
-        $types = [
-            StatusChanged::STATUS_CHANGED,
-            StatusChanged::CONDITION_CHANGED,
-            StatusChanged::LOCATION_CHANGED,
-        ];
         
         // Récupérer les exemplaires
         $exemplaireRepository = $manager->getRepository(Exemplaires::class);
@@ -41,8 +34,13 @@ class HistoriqueInventaireFixtures extends Fixture
             $exemplaire = $faker->randomElement($exemplaires);
             $historique->setExemplaires($exemplaire);
             
-            // Type de changement
-            $type = $faker->randomElement($types);
+            // Type de changement avec Enum
+            $typesDisponibles = [
+                StatusChanged::STATUS_CHANGED,
+                StatusChanged::CONDITION_CHANGED,
+                StatusChanged::LOCATION_CHANGED,
+            ];
+            $type = $faker->randomElement($typesDisponibles);
             $historique->setType($type);
             
             $manager->persist($historique);

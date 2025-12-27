@@ -2,6 +2,7 @@
 
 namespace App\Command;
 
+use App\Enum\StatutEmprunt;
 use App\Entity\Emprunt;
 use App\Repository\EmpruntRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -31,7 +32,7 @@ class CommandeRappelEmpruntTest extends Command
 
         $emprunts = $this->empruntRepository->createQueryBuilder('e')
             ->where('e.status = :status')
-            ->setParameter('status', 'en_cours')
+            ->setParameter('status', StatutEmprunt::EN_COURS)
             ->setMaxResults(3)
             ->getQuery()
             ->getResult();
@@ -58,7 +59,7 @@ class CommandeRappelEmpruntTest extends Command
         ));
 
         $emprunts[2]->setDueAt($today->modify('-7 days'));
-        $emprunts[2]->setStatus('en_retard');
+        $emprunts[2]->setStatus(StatutEmprunt::EN_RETARD);
         $io->info(sprintf(
             'Emprunt #%d configuré pour J+7 (retard depuis le %s)',
             $emprunts[2]->getId(),

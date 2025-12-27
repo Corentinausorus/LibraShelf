@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\EtatExemplaire;
 use App\Repository\ExemplairesRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -18,8 +19,8 @@ class Exemplaires
     #[ORM\Column(length: 10)]
     private ?string $cote = null;
 
-    #[ORM\Column(length: 40)]
-    private ?string $etat = null;
+    #[ORM\Column(enumType: EtatExemplaire::class)]
+    private ?EtatExemplaire $etat = null;
 
     #[ORM\Column]
     private ?bool $disponible = null;
@@ -61,12 +62,12 @@ class Exemplaires
         return $this;
     }
 
-    public function getEtat(): ?string
+    public function getEtat(): ?EtatExemplaire
     {
         return $this->etat;
     }
 
-    public function setEtat(string $etat): static
+    public function setEtat(EtatExemplaire $etat): static
     {
         $this->etat = $etat;
 

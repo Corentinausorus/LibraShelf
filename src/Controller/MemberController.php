@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Enum\StatutReservation;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
@@ -112,7 +113,6 @@ final class MemberController extends AbstractController
     #[Route('/exemplaire/{id}/reserve', name: 'member_reserve_exemplaire')]
     public function reserve(Exemplaires $exemplaire, EntityManagerInterface $em): Response
     {
-
         if (!$exemplaire->isDisponible()) {
             $this->addFlash('error', 'Cet exemplaire est déjà réservé.');
             return $this->redirectToRoute('app_liste_livres');
@@ -121,13 +121,8 @@ final class MemberController extends AbstractController
         $reservation = new Reservation();
         $reservation->setCreationDate(new \DateTimeImmutable());
         $reservation->setUser($this->getUser());
-
-        // required non-nullable column
-        $reservation->setStatut('A venir chercher');
-
+        $reservation->setStatut(StatutReservation::A_RECUPERER);
         $reservation->setExemplaire($exemplaire);
-
-        // ensure the required ouvrage relation is set
         $reservation->setOuvrage($exemplaire->getOuvrage());
 
         $exemplaire->setDisponible(false);
@@ -165,24 +160,25 @@ final class MemberController extends AbstractController
         $reservation = new Reservation();
         $reservation->setCreationDate(new \DateTimeImmutable());
         $reservation->setUser($this->getUser());
-
-        // required non-nullable column
-        $reservation->setStatut('Réserfé'); // <-- adapt to your allowed values
-
-        // set the ouvrage to satisfy NOT NULL constraint
         $reservation->setOuvrage($ouvrage);
 
-        // Optionnel : lier un exemplaire disponible immédiatement
+        // Chercher un exemplaire disponible
         $disponible = $ouvrage->getExemplaires()->filter(fn($ex) => $ex->isDisponible());
+        
         if (!$disponible->isEmpty()) {
-            $reservation->setExemplaire($disponible->first());
-            $disponible->first()->setDisponible(false);
+            $exemplaire = $disponible->first();
+            $reservation->setExemplaire($exemplaire);
+            $reservation->setStatut(StatutReservation::A_RECUPERER);
+            $exemplaire->setDisponible(false);
+            $this->addFlash('success', 'Livre mis de côté ! Vous avez 48h pour venir le chercher.');
+        } else {
+            $reservation->setExemplaire(null);
+            $reservation->setStatut(StatutReservation::EN_ATTENTE);
+            $this->addFlash('info', 'Aucun exemplaire disponible. Vous avez rejoint la file d\'attente.');
         }
 
         $em->persist($reservation);
         $em->flush();
-
-        $this->addFlash('success', 'Votre réservation a bien été enregistrée !');
 
         return $this->redirectToRoute('member_reservations');
     }

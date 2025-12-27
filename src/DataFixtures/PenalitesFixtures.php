@@ -10,7 +10,7 @@ use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 use Faker\Factory;
 
-class PenalitesFixtures extends Fixture
+class PenalitesFixtures extends Fixture implements DependentFixtureInterface
 {
     public function load(ObjectManager $manager): void
     {
@@ -23,14 +23,6 @@ class PenalitesFixtures extends Fixture
         if (empty($members)) {
             return;
         }
-        
-        // Raisons possibles
-        $raisons = [
-            PenaliteRaison::RETARD,
-            PenaliteRaison::PERDU,
-            PenaliteRaison::ABIME,
-            PenaliteRaison::AUTRE,
-        ];
         
         // Créer 5-10 pénalités pour différents membres
         $nbPenalites = $faker->numberBetween(5, 10);
@@ -46,9 +38,15 @@ class PenalitesFixtures extends Fixture
             $montant = $faker->numberBetween(50, 2000);
             $penalite->setMontant($montant);
             
-            // Raison(s) - généralement une seule, parfois plusieurs
+            // Raison(s) avec Enum - généralement une seule, parfois plusieurs
             $nbRaisons = $faker->boolean(80) ? 1 : $faker->numberBetween(1, 2);
-            $raisonsChoisies = $faker->randomElements($raisons, $nbRaisons);
+            $raisonsDisponibles = [
+                PenaliteRaison::RETARD,
+                PenaliteRaison::PERDU,
+                PenaliteRaison::ABIME,
+                PenaliteRaison::AUTRE,
+            ];
+            $raisonsChoisies = $faker->randomElements($raisonsDisponibles, $nbRaisons);
             $penalite->setRaison($raisonsChoisies);
             
             $manager->persist($penalite);

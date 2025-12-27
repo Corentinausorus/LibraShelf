@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use App\Enum\StatutReservation;
 
 #[Route('/reservation')]
 final class ReservationController extends AbstractController
@@ -131,14 +132,14 @@ final class ReservationController extends AbstractController
 
         if ($exemplaireDispo) {
             $reservation->setExemplaire($exemplaireDispo);
-            $reservation->setStatut('À récupérer'); 
+            $reservation->setStatut(StatutReservation::A_RECUPERER); 
             
             $exemplaireDispo->setDisponible(false); 
             
             $this->addFlash('success', 'Livre mis de côté ! Vous avez 48h pour venir le chercher.');
         } else {
             $reservation->setExemplaire(null); 
-            $reservation->setStatut('En attente');
+            $reservation->setStatut(StatutReservation::EN_ATTENTE);
 
             $this->addFlash('info', 'Aucun exemplaire disponible. Vous avez rejoint la file d\'attente.');
         }

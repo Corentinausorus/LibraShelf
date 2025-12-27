@@ -2,12 +2,11 @@
 
 namespace App\Entity;
 
+use App\Enum\StatutEmprunt;
 use App\Repository\EmpruntRepository;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\UX\Turbo\Attribute\Broadcast;
 
 #[ORM\Entity(repositoryClass: EmpruntRepository::class)]
-//#[Broadcast]
 class Emprunt
 {
     #[ORM\Id]
@@ -34,8 +33,8 @@ class Emprunt
     #[ORM\Column(nullable: true)]
     private ?float $penalty = null;
 
-    #[ORM\Column(length: 255)]
-    private ?string $status = null;
+    #[ORM\Column(enumType: StatutEmprunt::class)]
+    private ?StatutEmprunt $status = null;
 
     public function getId(): ?int
     {
@@ -114,15 +113,39 @@ class Emprunt
         return $this;
     }
 
-    public function getStatus(): ?string
+    public function getStatus(): ?StatutEmprunt
     {
         return $this->status;
     }
 
-    public function setStatus(string $status): static
+    public function setStatus(StatutEmprunt $status): static
     {
         $this->status = $status;
 
         return $this;
+    }
+
+    /**
+     * Vérifie si l'emprunt est en retard.
+     */
+    public function isEnRetard(): bool
+    {
+        return $this->status === StatutEmprunt::EN_RETARD;
+    }
+
+    /**
+     * Vérifie si l'emprunt est en cours.
+     */
+    public function isEnCours(): bool
+    {
+        return $this->status === StatutEmprunt::EN_COURS;
+    }
+
+    /**
+     * Vérifie si l'emprunt est retourné.
+     */
+    public function isRetourne(): bool
+    {
+        return $this->status === StatutEmprunt::RETOURNE;
     }
 }

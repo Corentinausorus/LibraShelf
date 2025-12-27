@@ -4,6 +4,7 @@ namespace App\DataFixtures;
 
 use App\Entity\Exemplaires;
 use App\Entity\Ouvrage;
+use App\Enum\EtatExemplaire;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
@@ -17,44 +18,42 @@ class ExemplairesFixtures extends Fixture implements DependentFixtureInterface
     {
         $faker = Factory::create('fr_FR');
         
-        // États possibles pour un exemplaire
-        $etats = ['Neuf', 'Très bon', 'Bon', 'Acceptable', 'Usé', 'Endommagé'];
-        
-        // Récupérer tous les ouvrages créés
+        // Récupérer tous les ouvrages
         $ouvrageRepository = $manager->getRepository(Ouvrage::class);
         $ouvrages = $ouvrageRepository->findAll();
+        
+        if (empty($ouvrages)) {
+            return;
+        }
         
         $exemplairesCount = 0;
         
         // Pour chaque ouvrage, créer entre 1 et 5 exemplaires
-        foreach ($ouvrages as $index => $ouvrage) {
+        foreach ($ouvrages as $ouvrage) {
             $nbExemplaires = $faker->numberBetween(1, 5);
             
-            for ($i = 1; $i <= $nbExemplaires; $i++) {
+            for ($i = 0; $i < $nbExemplaires; $i++) {
                 $exemplaire = new Exemplaires();
-                
-                // Cote unique : Code ouvrage + numéro d'exemplaire
-                // Format: OUV{id}-{num} exemple: OUV5-02
-                $cote = sprintf('O%02d-%d', $index + 1, $i);
-                $exemplaire->setCote($cote);
-                
-                // État aléatoire (80% de chance d'être en bon état)
-                if ($faker->boolean(80)) {
-                    $exemplaire->setEtat($faker->randomElement(['Neuf', 'Très bon', 'Bon']));
-                } else {
-                    $exemplaire->setEtat($faker->randomElement(['Acceptable', 'Usé', 'Endommagé']));
-                }
-                
-                // Disponibilité (85% de chance d'être disponible)
-                $disponible = $faker->boolean(85);
-                $exemplaire->setDisponible($disponible);
-                
-                // Lier à l'ouvrage
                 $exemplaire->setOuvrage($ouvrage);
                 
-                $manager->persist($exemplaire);
+                // Cote unique (ex: ROM-001, SF-042)
+                $prefix = strtoupper(substr($ouvrage->getTitre(), 0, 3));
+                $exemplaire->setCote(sprintf('%s-%03d', $prefix, $exemplairesCount + 1));
                 
-                // Ajouter une référence pour créer des emprunts plus tard
+                // État aléatoire avec les Enums
+                $etats = [
+                    EtatExemplaire::NEUF,
+                    EtatExemplaire::EXCELLENT,
+                    EtatExemplaire::BON,
+                    EtatExemplaire::CORRECT,
+                    EtatExemplaire::USE,
+                ];
+                $exemplaire->setEtat($faker->randomElement($etats));
+                
+                // Disponibilité (80% disponible)
+                $exemplaire->setDisponible($faker->boolean(80));
+                
+                $manager->persist($exemplaire);
                 $this->addReference(self::EXEMPLAIRE_REFERENCE . $exemplairesCount, $exemplaire);
                 $exemplairesCount++;
             }

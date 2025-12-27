@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\StatutReservation;
 use App\Repository\ReservationRepository;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -17,24 +18,6 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: ReservationRepository::class)]
 class Reservation
 {
-    // Constantes de statut pour la gestion de la file d'attente
-    public const STATUT_EN_ATTENTE = 'en_attente';
-    public const STATUT_DISPONIBLE = 'disponible';
-    public const STATUT_ANNULEE = 'annulee';
-    public const STATUT_TERMINEE = 'terminee';
-    public const STATUT_EXPIREE = 'expiree';
-
-    /**
-     * Liste des statuts valides pour une réservation.
-     */
-    public const STATUTS = [
-        'En attente' => self::STATUT_EN_ATTENTE,
-        'Disponible' => self::STATUT_DISPONIBLE,
-        'Annulée' => self::STATUT_ANNULEE,
-        'Terminée' => self::STATUT_TERMINEE,
-        'Expirée' => self::STATUT_EXPIREE,
-    ];
-
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -54,8 +37,8 @@ class Reservation
     #[ORM\JoinColumn(nullable: false)]
     private ?Ouvrage $ouvrage = null;
 
-    #[ORM\Column(length: 255)]
-    private ?string $statut = self::STATUT_EN_ATTENTE;
+    #[ORM\Column(enumType: StatutReservation::class)]
+    private ?StatutReservation $statut = StatutReservation::EN_ATTENTE;
 
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $notifiedAt = null;
@@ -113,12 +96,12 @@ class Reservation
         return $this;
     }
 
-    public function getStatut(): ?string
+    public function getStatut(): ?StatutReservation
     {
         return $this->statut;
     }
 
-    public function setStatut(string $statut): static
+    public function setStatut(StatutReservation $statut): static
     {
         $this->statut = $statut;
 
@@ -142,7 +125,7 @@ class Reservation
      */
     public function isEnAttente(): bool
     {
-        return $this->statut === self::STATUT_EN_ATTENTE;
+        return $this->statut === StatutReservation::EN_ATTENTE;
     }
 
     /**
@@ -150,7 +133,8 @@ class Reservation
      */
     public function isDisponible(): bool
     {
-        return $this->statut === self::STATUT_DISPONIBLE;
+        return $this->statut === StatutReservation::DISPONIBLE 
+            || $this->statut === StatutReservation::A_RECUPERER;
     }
 
     /**
@@ -158,37 +142,11 @@ class Reservation
      */
     public function isActive(): bool
     {
-        return in_array($this->statut, [self::STATUT_EN_ATTENTE, self::STATUT_DISPONIBLE], true);
-    }
-
-    /**
-     * Retourne le libellé du statut en français.
-     */
-    public function getStatutLabel(): string
-    {
-        return match ($this->statut) {
-            self::STATUT_EN_ATTENTE => 'En attente',
-            self::STATUT_DISPONIBLE => 'Disponible',
-            self::STATUT_ANNULEE => 'Annulée',
-            self::STATUT_TERMINEE => 'Terminée',
-            self::STATUT_EXPIREE => 'Expirée',
-            default => 'Inconnu',
-        };
-    }
-
-    /**
-     * Retourne la classe CSS Bootstrap pour le badge de statut.
-     */
-    public function getStatutBadgeClass(): string
-    {
-        return match ($this->statut) {
-            self::STATUT_EN_ATTENTE => 'bg-warning',
-            self::STATUT_DISPONIBLE => 'bg-success',
-            self::STATUT_ANNULEE => 'bg-secondary',
-            self::STATUT_TERMINEE => 'bg-info',
-            self::STATUT_EXPIREE => 'bg-danger',
-            default => 'bg-secondary',
-        };
+        return in_array($this->statut, [
+            StatutReservation::EN_ATTENTE, 
+            StatutReservation::DISPONIBLE,
+            StatutReservation::A_RECUPERER
+        ], true);
     }
 
     /**
@@ -196,7 +154,7 @@ class Reservation
      */
     public function markAsDisponible(): static
     {
-        $this->statut = self::STATUT_DISPONIBLE;
+        $this->statut = StatutReservation::DISPONIBLE;
         $this->notifiedAt = new \DateTimeImmutable();
 
         return $this;
@@ -207,7 +165,7 @@ class Reservation
      */
     public function cancel(): static
     {
-        $this->statut = self::STATUT_ANNULEE;
+        $this->statut = StatutReservation::ANNULEE;
 
         return $this;
     }
@@ -217,7 +175,7 @@ class Reservation
      */
     public function complete(): static
     {
-        $this->statut = self::STATUT_TERMINEE;
+        $this->statut = StatutReservation::TERMINEE;
 
         return $this;
     }

@@ -5,6 +5,7 @@ namespace App\DataFixtures;
 use App\Entity\Emprunt;
 use App\Entity\Exemplaires;
 use App\Entity\User;
+use App\Enum\StatutEmprunt;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
@@ -12,14 +13,9 @@ use Faker\Factory;
 
 class EmpruntFixtures extends Fixture implements DependentFixtureInterface
 {
-    public const EMPRUNT_REFERENCE = 'emprunt_';
-
     public function load(ObjectManager $manager): void
     {
         $faker = Factory::create('fr_FR');
-        
-        // Statuts possibles pour un emprunt
-        $statuts = ['en_cours', 'retourne', 'en_retard'];
         
         // Récupérer les membres et exemplaires
         $userRepository = $manager->getRepository(User::class);
@@ -28,85 +24,52 @@ class EmpruntFixtures extends Fixture implements DependentFixtureInterface
         $exemplaireRepository = $manager->getRepository(Exemplaires::class);
         $exemplaires = $exemplaireRepository->findAll();
         
-        // Vérifier qu'on a des données
         if (empty($members) || empty($exemplaires)) {
             return;
         }
         
-        // Créer 15-25 emprunts
-        $nbEmprunts = min($faker->numberBetween(15, 25), count($exemplaires));
-        $usedExemplaires = [];
-        $empruntCount = 0;
+        // Créer 20-30 emprunts
+        $nbEmprunts = $faker->numberBetween(20, 30);
         
         for ($i = 0; $i < $nbEmprunts; $i++) {
-            // Trouver un exemplaire non encore utilisé
-            $exemplaire = null;
-            $attempts = 0;
-            while ($exemplaire === null && $attempts < 50) {
-                $candidat = $faker->randomElement($exemplaires);
-                if ($candidat !== null && !in_array($candidat->getId(), $usedExemplaires)) {
-                    $exemplaire = $candidat;
-                    $usedExemplaires[] = $candidat->getId();
-                }
-                $attempts++;
-            }
-            
-            if ($exemplaire === null) {
-                continue; // Plus d'exemplaires disponibles
-            }
-            
             $emprunt = new Emprunt();
             
             // Membre aléatoire
             $member = $faker->randomElement($members);
             $emprunt->setUser($member);
             
-            // Exemplaire
+            // Exemplaire aléatoire
+            $exemplaire = $faker->randomElement($exemplaires);
             $emprunt->setExemplaire($exemplaire);
             
             // Dates
-            $startDate = $faker->dateTimeBetween('-2 months', '-1 week');
-            $startAt = \DateTimeImmutable::createFromMutable($startDate);
-            $emprunt->setStartAt($startAt);
+            $startDate = $faker->dateTimeBetween('-2 months', 'now');
+            $emprunt->setStartAt(\DateTimeImmutable::createFromMutable($startDate));
             
-            // Date de retour prévue (14 jours après)
-            $dueAt = $startAt->modify('+14 days');
-            $emprunt->setDueAt($dueAt);
+            // Date de retour prévue (14 jours après le début)
+            $dueDate = (clone $startDate)->modify('+14 days');
+            $emprunt->setDueAt(\DateTimeImmutable::createFromMutable($dueDate));
             
-            // Statut et date de retour
-            $status = $faker->randomElement($statuts);
-            $emprunt->setStatus($status);
-            
-            if ($status === 'retourne') {
-                // Retourné dans les temps ou légèrement en retard
-                $returnDays = $faker->numberBetween(-3, 5);
-                $returnedAt = $dueAt->modify("{$returnDays} days");
-                $emprunt->setReturnedAt($returnedAt);
-                
-                // Pénalité si en retard
-                if ($returnDays > 0) {
-                    $emprunt->setPenalty($returnDays * 0.50);
-                }
-                
-                // Remettre l'exemplaire disponible
-                $exemplaire->setDisponible(true);
-            } elseif ($status === 'en_retard') {
-                // En retard, pas encore retourné
-                $emprunt->setReturnedAt($startAt);
-                $daysLate = (new \DateTimeImmutable())->diff($dueAt)->days;
-                if ($daysLate > 0) {
-                    $emprunt->setPenalty($daysLate * 0.50);
-                }
-                $exemplaire->setDisponible(false);
+            // Date de retour effective (pour certains emprunts)
+            if ($faker->boolean(70)) { // 70% sont retournés
+                $returnDate = $faker->dateTimeBetween($startDate, 'now');
+                $emprunt->setReturnedAt(\DateTimeImmutable::createFromMutable($returnDate));
+                $emprunt->setStatus(StatutEmprunt::RETOURNE);
             } else {
-                // En cours
-                $emprunt->setReturnedAt($startAt);
-                $exemplaire->setDisponible(false);
+                // Déterminer si en cours ou en retard
+                $now = new \DateTime();
+                if ($dueDate < $now) {
+                    $emprunt->setStatus(StatutEmprunt::EN_RETARD);
+                    // Calculer une pénalité (50 centimes par jour)
+                    $daysLate = $now->diff($dueDate)->days;
+                    $emprunt->setPenalty($daysLate * 0.50);
+                } else {
+                    $emprunt->setStatus(StatutEmprunt::EN_COURS);
+                }
+                $emprunt->setReturnedAt(\DateTimeImmutable::createFromMutable($now));
             }
             
             $manager->persist($emprunt);
-            $this->addReference(self::EMPRUNT_REFERENCE . $empruntCount, $emprunt);
-            $empruntCount++;
         }
 
         $manager->flush();
@@ -116,7 +79,6 @@ class EmpruntFixtures extends Fixture implements DependentFixtureInterface
     {
         return [
             UserFixtures::class,
-            OuvrageFixtures::class,
             ExemplairesFixtures::class,
         ];
     }

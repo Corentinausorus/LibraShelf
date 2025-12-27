@@ -14,13 +14,6 @@ class NotificationsFixtures extends Fixture
     {
         $faker = Factory::create('fr_FR');
         
-        // Types de notifications
-        $types = [
-            NotificationType::EMAIL,
-            NotificationType::MESSAGE,
-            NotificationType::INTERNE,
-        ];
-        
         // Templates de sujets
         $subjects = [
             'Rappel : Votre emprunt arrive à échéance',
@@ -38,9 +31,14 @@ class NotificationsFixtures extends Fixture
         for ($i = 0; $i < $nbNotifications; $i++) {
             $notification = new Notifications();
             
-            // Type(s) de notification
+            // Type(s) de notification avec Enum
             $nbTypes = $faker->boolean(70) ? 1 : $faker->numberBetween(1, 2);
-            $typesChoisis = $faker->randomElements($types, $nbTypes);
+            $typesDisponibles = [
+                NotificationType::EMAIL,
+                NotificationType::MESSAGE,
+                NotificationType::INTERNE,
+            ];
+            $typesChoisis = $faker->randomElements($typesDisponibles, $nbTypes);
             $notification->setType($typesChoisis);
             
             // Sujet
@@ -56,7 +54,7 @@ class NotificationsFixtures extends Fixture
                 $notification->setToEmail($faker->safeEmail());
             }
             
-            // SMS destinataire (si type SMS)
+            // SMS destinataire (si type MESSAGE)
             if (in_array(NotificationType::MESSAGE, $typesChoisis)) {
                 $notification->setToSms($faker->phoneNumber());
             }
