@@ -1,0 +1,22 @@
+monolog:
+    handlers:
+        # Handler principal avec rotation automatique
+        main:
+            type: rotating_file
+            path: '%kernel.logs_dir%/%kernel.environment%.log'
+            level: info
+            max_files: 30  # Garde les logs des 30 derniers jours
+            channels: ['!event']
+        
+        # Handler pour les erreurs critiques
+        critical:
+            type: fingers_crossed
+            action_level: critical
+            handler: critical_nested
+            buffer_size: 50
+            
+        critical_nested:
+            type: stream
+            path: '%kernel.logs_dir%/critical.log'
+            level: critical
+            formatter: monolog.formatter.json

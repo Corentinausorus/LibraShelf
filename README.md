@@ -446,17 +446,38 @@ VALUES (14, 50, 2, NOW());
 * * * * * cd /path/to/librashelf && php bin/console messenger:consume async --limit=100
 ```
 
-### Supervision
+### Gestion des logs
+
+#### Rotation automatique des logs
+
+Les logs sont **automatiquement** rotés et purgés grâce à Monolog :
+
+**En production** :
+- Un nouveau fichier est créé chaque jour (ex: `prod-2025-01-27.log`)
+- Les fichiers de plus de **30 jours** sont automatiquement supprimés
+- Niveau de log : `info` (n'enregistre que l'essentiel)
+
+**En développement** :
+- Un nouveau fichier est créé chaque jour (ex: `dev-2025-01-27.log`)
+- Les fichiers de plus de **10 jours** sont automatiquement supprimés
+- Niveau de log : `debug` (enregistre tout pour le débogage)
+
+**Fichier critique** :
+- Un fichier `critical.log` sépare enregistre uniquement les erreurs graves
+- Format JSON pour faciliter l'analyse
+- À surveiller manuellement
+
+#### Surveillance manuelle
 
 ```bash
-# Vérifier les messages en attente
-php bin/console messenger:stats
+# Voir la taille du dossier de logs
+du -sh var/log/
 
-# Vérifier les logs
-tail -f var/log/dev.log
+# Lister les fichiers de logs
+ls -lh var/log/
 
-# Nettoyer le cache
-php bin/console cache:clear
+# Voir les 10 dernières lignes du log du jour
+tail -f var/log/prod-$(date +%Y-%m-%d).log
 ```
 
 ## 🧪 Tests
