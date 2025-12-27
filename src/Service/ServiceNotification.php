@@ -6,149 +6,99 @@ use App\Entity\Emprunt;
 use App\Entity\Notifications;
 use App\Enum\NotificationType;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Email;
-use Psr\Log\LoggerInterface;
+use Symfony\Component\Mime\Address;
 
 class ServiceNotification
 {
     public function __construct(
         private MailerInterface $mailer,
-        private EntityManagerInterface $entityManager,
-        private LoggerInterface $logger
-    ) {}
+        private EntityManagerInterface $entityManager
+    ) {
+    }
 
-
+    /**
+     * Envoie un rappel d'emprunt (J-3, J-0, J+7).
+     */
     public function envoieRappelEmprunt(Emprunt $emprunt, string $type): void
     {
         $user = $emprunt->getUser();
-        if (!$user || !$user->getEmail()) {
-            $this->logger->warning('Impossible d\'envoyer le rappel : utilisateur ou email manquant', [
-                'emprunt_id' => $emprunt->getId()
-            ]);
+        $exemplaire = $emprunt->getExemplaire();
+        $ouvrage = $exemplaire?->getOuvrage();
+
+        if (!$user || !$ouvrage) {
             return;
         }
 
-        $exemplaire = $emprunt->getExemplaire();
-        $ouvrage = $exemplaire?->getOuvrage();
-        
-        // Générer le sujet et le corps selon le type de rappel
-        [$objet, $corps] = $this->ContenuEmail($emprunt, $type, $user->getNom(), $ouvrage?->getTitre() ?? 'Livre');
+        // Déterminer le sujet et le template selon le type de rappel
+        [$subject, $template] = $this->getReminderDetails($type);
 
-        // Créer et envoyer l'email
-        $email = (new Email())
-            ->from('bibliotheque@librashelf.local')
+        // Créer l'email avec template Twig
+        $email = (new TemplatedEmail())
+            ->from(new Address('bibliotheque@librashelf.fr', 'LibraShelf'))
             ->to($user->getEmail())
-            ->subject($objet)
-            ->html($corps);
+            ->subject($subject)
+            ->htmlTemplate($template)
+            ->context([
+                'emprunt' => $emprunt,
+                'user' => $user,
+                'ouvrage' => $ouvrage,
+                'dueDate' => $emprunt->getDueAt(),
+                'reminderType' => $type,
+            ]);
 
-        try {
-            $this->mailer->send($email);
-            
-            // Enregistrer la notification dans la base
-            $this->saveNotification($user->getEmail(), $objet, $corps, NotificationType::EMAIL);
-            
-            $this->logger->info('Rappel envoyé avec succès', [
-                'emprunt_id' => $emprunt->getId(),
-                'user_email' => $user->getEmail(),
-                'type' => $type
-            ]);
-        } catch (\Exception $e) {
-            $this->logger->error('Erreur lors de l\'envoi du rappel', [
-                'emprunt_id' => $emprunt->getId(),
-                'error' => $e->getMessage()
-            ]);
-        }
+        // Envoyer l'email
+        $this->mailer->send($email);
+
+        // Enregistrer la notification en base
+        $this->saveNotification(
+            NotificationType::EMAIL,
+            $user->getEmail(),
+            $subject,
+            sprintf('Rappel %s pour le livre "%s"', $type, $ouvrage->getTitre())
+        );
     }
 
     /**
-     * Génère le contenu de l'email selon le type de rappel
+     * Retourne les détails du rappel selon le type.
      */
-    private function ContenuEmail(Emprunt $emprunt, string $type, string $userName, string $ouvrageTitle): array
+    private function getReminderDetails(string $type): array
     {
-        $dueDate = $emprunt->getDueAt()->format('d/m/Y');
-        
-        switch ($type) {
-            case 'J-3':
-                $objet = '📚 Rappel : Retour de livre dans 3 jours';
-                $corps = <<<HTML
-                <html>
-                <body style="font-family: Arial, sans-serif; padding: 20px;">
-                    <h2 style="color: #2563eb;">Bonjour {$userName},</h2>
-                    <p>Ceci est un rappel concernant votre emprunt :</p>
-                    <div style="background-color: #f0f9ff; padding: 15px; border-left: 4px solid #2563eb; margin: 20px 0;">
-                        <p><strong>Livre :</strong> {$ouvrageTitle}</p>
-                        <p><strong>Date de retour prévue :</strong> {$dueDate}</p>
-                    </div>
-                    <p>⏰ <strong>Il vous reste 3 jours</strong> pour retourner ce livre à la bibliothèque.</p>
-                    <p>Merci de respecter la date de retour pour éviter toute pénalité.</p>
-                    <hr style="margin: 20px 0;">
-                    <p style="color: #666; font-size: 12px;">LibraShelf - Votre bibliothèque en ligne</p>
-                </body>
-                </html>
-                HTML;
-                break;
-
-            case 'J-0':
-                $objet = '⚠️ Rappel : Retour de livre AUJOURD\'HUI';
-                $corps = <<<HTML
-                <html>
-                <body style="font-family: Arial, sans-serif; padding: 20px;">
-                    <h2 style="color: #dc2626;">Bonjour {$userName},</h2>
-                    <p><strong>Date de retour : AUJOURD'HUI ({$dueDate})</strong></p>
-                    <div style="background-color: #fef2f2; padding: 15px; border-left: 4px solid #dc2626; margin: 20px 0;">
-                        <p><strong>Livre :</strong> {$ouvrageTitle}</p>
-                        <p><strong>Date de retour :</strong> {$dueDate}</p>
-                    </div>
-                    <p>⚠️ <strong>Attention :</strong> Ce livre doit être retourné aujourd'hui pour éviter toute pénalité de retard.</p>
-                    <p>Merci de venir le déposer à la bibliothèque dès que possible.</p>
-                    <hr style="margin: 20px 0;">
-                    <p style="color: #666; font-size: 12px;">LibraShelf - Votre bibliothèque en ligne</p>
-                </body>
-                </html>
-                HTML;
-                break;
-
-            case 'J+7':
-                $penalty = $emprunt->getPenalty() ?? 0;
-                $objet = '🚨 Retard de retour - Action requise';
-                $corps = <<<HTML
-                <html>
-                <body style="font-family: Arial, sans-serif; padding: 20px;">
-                    <h2 style="color: #991b1b;">Bonjour {$userName},</h2>
-                    <p><strong>Votre livre est en retard depuis 7 jours !</strong></p>
-                    <div style="background-color: #fef2f2; padding: 15px; border-left: 4px solid #991b1b; margin: 20px 0;">
-                        <p><strong>Livre :</strong> {$ouvrageTitle}</p>
-                        <p><strong>Date de retour prévue :</strong> {$dueDate}</p>
-                        <p><strong>Pénalités accumulées :</strong> {$penalty} €</p>
-                    </div>
-                    <p>🚨 <strong>Action requise :</strong> Merci de retourner ce livre immédiatement pour limiter les pénalités supplémentaires.</p>
-                    <p>Les pénalités continuent de s'accumuler chaque jour de retard.</p>
-                    <hr style="margin: 20px 0;">
-                    <p style="color: #666; font-size: 12px;">LibraShelf - Votre bibliothèque en ligne</p>
-                </body>
-                </html>
-                HTML;
-                break;
-
-            default:
-                $objet = 'Rappel emprunt';
-                $corps = "<p>Rappel concernant votre emprunt du livre : {$ouvrageTitle}</p>";
-        }
-
-        return [$objet, $corps];
+        return match($type) {
+            'J-3' => [
+                'Rappel : Retour dans 3 jours',
+                'emails/loan_reminder_j3.html.twig'
+            ],
+            'J-0' => [
+                'Rappel : Retour aujourd\'hui',
+                'emails/loan_reminder_j0.html.twig'
+            ],
+            'J+7' => [
+                '⚠️ Retard de 7 jours - Action requise',
+                'emails/loan_reminder_j7.html.twig'
+            ],
+            default => [
+                'Rappel d\'emprunt',
+                'emails/loan_reminder_generic.html.twig'
+            ]
+        };
     }
 
     /**
-     * Enregistre la notification dans la base de données
+     * Enregistre une notification en base de données.
      */
-    private function saveNotification(string $email, string $objet, string $corps, NotificationType $type): void
-    {
+    private function saveNotification(
+        NotificationType $type,
+        string $toEmail,
+        string $subject,
+        string $body
+    ): void {
         $notification = new Notifications();
         $notification->setType([$type]);
-        $notification->setToEmail($email);
-        $notification->setSubject($objet);
-        $notification->setBody($corps);
+        $notification->setToEmail($toEmail);
+        $notification->setSubject($subject);
+        $notification->setBody($body);
 
         $this->entityManager->persist($notification);
         $this->entityManager->flush();

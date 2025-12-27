@@ -1,0 +1,48 @@
+{# filepath: c:\Users\Meersseman Gilles\OneDrive\Documents\GitHub\LibraShelf\templates\emails\loan_reminder_j7.html.twig #}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #dc3545; color: white; padding: 20px; text-align: center; }
+        .content { background-color: #f8f9fa; padding: 20px; margin: 20px 0; }
+        .danger { background-color: #f8d7da; padding: 15px; border-left: 4px solid #dc3545; margin: 15px 0; }
+        .footer { text-align: center; color: #666; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚨 Action requise</h1>
+            <p>Retard de 7 jours</p>
+        </div>
+
+        <div class="content">
+            <h2>Bonjour {{ user.nom }},</h2>
+            
+            <div class="danger">
+                <p style="margin: 0; font-weight: bold;">⚠️ Votre emprunt est en retard depuis 7 jours !</p>
+            </div>
+
+            <p><strong>📖 Livre :</strong> {{ ouvrage.titre }}</p>
+            <p><strong>📅 Date de retour prévue :</strong> {{ dueDate|date('d/m/Y') }}</p>
+            <p><strong>💰 Pénalité actuelle :</strong> {{ emprunt.penalty|number_format(2, ',', ' ') }} €</p>
+            
+            <p style="color: #721c24; font-weight: bold;">
+                Merci de rapporter ce livre immédiatement pour éviter l'accumulation de frais supplémentaires.
+            </p>
+            
+            <p>
+                <small>Les pénalités continuent de s'accumuler quotidiennement jusqu'au retour du livre.</small>
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>Cet email a été envoyé automatiquement par LibraShelf.</p>
+            <p>Bibliothèque LibraShelf - bibliotheque@librashelf.fr</p>
+        </div>
+    </div>
+</body>
+</html>

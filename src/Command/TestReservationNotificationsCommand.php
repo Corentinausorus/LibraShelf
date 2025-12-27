@@ -43,7 +43,7 @@ class TestReservationNotificationsCommand extends Command
                 $reservation->getId(),
                 $reservation->getUser()?->getEmail() ?? 'N/A',
                 $reservation->getOuvrage()?->getTitre() ?? 'N/A',
-                $reservation->getStatut() ?? 'N/A'
+                $reservation->getStatut()?->getLabel() ?? 'N/A'  // Utiliser getLabel() pour les Enums
             ));
         }
 

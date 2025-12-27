@@ -1,0 +1,46 @@
+{# filepath: c:\Users\Meersseman Gilles\OneDrive\Documents\GitHub\LibraShelf\templates\emails\reservation_confirmation.html.twig #}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #007bff; color: white; padding: 20px; text-align: center; }
+        .content { background-color: #f8f9fa; padding: 20px; margin: 20px 0; }
+        .footer { text-align: center; color: #666; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 LibraShelf</h1>
+            <p>Confirmation de réservation</p>
+        </div>
+
+        <div class="content">
+            <h2>Bonjour {{ user.nom }},</h2>
+            
+            <p>Votre réservation a bien été enregistrée !</p>
+
+            <p><strong>Ouvrage :</strong> {{ ouvrage.titre }}</p>
+            <p><strong>Date de réservation :</strong> {{ reservation.creationDate|date('d/m/Y à H:i') }}</p>
+            
+            {% if reservation.statut.value == 'à_récupérer' %}
+                <p style="color: #28a745; font-weight: bold;">
+                    ✅ Votre livre est disponible ! Vous avez 48 heures pour venir le chercher.
+                </p>
+            {% else %}
+                <p style="color: #ffc107; font-weight: bold;">
+                    ⏳ Aucun exemplaire disponible actuellement. Vous êtes en file d'attente.
+                </p>
+            {% endif %}
+        </div>
+
+        <div class="footer">
+            <p>Cet email a été envoyé automatiquement par LibraShelf.</p>
+            <p>Bibliothèque LibraShelf - bibliotheque@librashelf.fr</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -2,136 +2,114 @@
 
 namespace App\Service;
 
-use App\Entity\Reservation;
 use App\Entity\Notifications;
+use App\Entity\Reservation;
 use App\Enum\NotificationType;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Email;
-use Psr\Log\LoggerInterface;
+use Symfony\Component\Mime\Address;
 
 class ReservationNotificationService
 {
     public function __construct(
         private MailerInterface $mailer,
-        private EntityManagerInterface $entityManager,
-        private LoggerInterface $logger
-    ) {}
+        private EntityManagerInterface $entityManager
+    ) {
+    }
 
     /**
-     * Envoie un email de confirmation lors de la création d'une réservation
+     * Envoie un email de confirmation de réservation.
      */
     public function sendReservationConfirmation(Reservation $reservation): void
     {
         $user = $reservation->getUser();
-        if (!$user || !$user->getEmail()) {
-            $this->logger->warning('Impossible d\'envoyer la confirmation : utilisateur ou email manquant', [
-                'reservation_id' => $reservation->getId()
-            ]);
+        $ouvrage = $reservation->getOuvrage();
+
+        if (!$user || !$ouvrage) {
             return;
         }
 
-        $ouvrage = $reservation->getOuvrage();
-        $ouvrageTitle = $ouvrage?->getTitre() ?? 'Livre';
-        $userName = $user->getNom();
-        $creationDate = $reservation->getCreationDate()->format('d/m/Y à H:i');
+        // Créer l'email avec template Twig
+        $email = (new TemplatedEmail())
+            ->from(new Address('bibliotheque@librashelf.fr', 'LibraShelf'))
+            ->to($user->getEmail())
+            ->subject('Confirmation de votre réservation')
+            ->htmlTemplate('emails/reservation_confirmation.html.twig')
+            ->context([
+                'reservation' => $reservation,
+                'user' => $user,
+                'ouvrage' => $ouvrage,
+            ]);
 
-        $subject = '✅ Confirmation de votre réservation';
-        $body = <<<HTML
-        <html>
-        <body style="font-family: Arial, sans-serif; padding: 20px;">
-            <h2 style="color: #16a34a;">Bonjour {$userName},</h2>
-            <p>Votre réservation a bien été enregistrée !</p>
-            <div style="background-color: #f0fdf4; padding: 15px; border-left: 4px solid #16a34a; margin: 20px 0;">
-                <p><strong>Livre :</strong> {$ouvrageTitle}</p>
-                <p><strong>Date de réservation :</strong> {$creationDate}</p>
-                <p><strong>Statut :</strong> En attente</p>
-            </div>
-            <p>📚 Vous recevrez un email dès qu'un exemplaire sera disponible pour vous.</p>
-            <p>Vous pourrez alors venir le récupérer à la bibliothèque.</p>
-            <hr style="margin: 20px 0;">
-            <p style="color: #666; font-size: 12px;">LibraShelf - Votre bibliothèque en ligne</p>
-        </body>
-        </html>
-        HTML;
+        // Envoyer l'email
+        $this->mailer->send($email);
 
-        $this->sendEmail($user->getEmail(), $subject, $body);
+        // Enregistrer la notification en base
+        $this->saveNotification(
+            NotificationType::EMAIL,
+            $user->getEmail(),
+            'Confirmation de votre réservation',
+            sprintf('Réservation confirmée pour "%s"', $ouvrage->getTitre())
+        );
     }
 
     /**
-     * Envoie un email lorsque la réservation devient disponible
+     * Envoie un email de disponibilité (livre prêt à récupérer).
      */
     public function sendReservationAvailableEmail(Reservation $reservation): void
     {
         $user = $reservation->getUser();
-        if (!$user || !$user->getEmail()) {
-            $this->logger->warning('Impossible d\'envoyer la notification de disponibilité : utilisateur ou email manquant', [
-                'reservation_id' => $reservation->getId()
-            ]);
+        $ouvrage = $reservation->getOuvrage();
+
+        if (!$user || !$ouvrage) {
             return;
         }
 
-        $ouvrage = $reservation->getOuvrage();
-        $ouvrageTitle = $ouvrage?->getTitre() ?? 'Livre';
-        $userName = $user->getNom();
-        $exemplaire = $reservation->getExemplaire();
-        $cote = $exemplaire?->getCote() ?? 'N/A';
+        // Créer l'email avec template Twig
+        $email = (new TemplatedEmail())
+            ->from(new Address('bibliotheque@librashelf.fr', 'LibraShelf'))
+            ->to($user->getEmail())
+            ->subject('Votre livre est disponible !')
+            ->htmlTemplate('emails/reservation_available.html.twig')
+            ->context([
+                'reservation' => $reservation,
+                'user' => $user,
+                'ouvrage' => $ouvrage,
+            ]);
 
-        $subject = '🎉 Votre réservation est disponible !';
-        $body = <<<HTML
-        <html>
-        <body style="font-family: Arial, sans-serif; padding: 20px;">
-            <h2 style="color: #2563eb;">Bonne nouvelle {$userName} !</h2>
-            <p><strong>Le livre que vous avez réservé est maintenant disponible !</strong></p>
-            <div style="background-color: #eff6ff; padding: 15px; border-left: 4px solid #2563eb; margin: 20px 0;">
-                <p><strong>Livre :</strong> {$ouvrageTitle}</p>
-                <p><strong>Cote :</strong> {$cote}</p>
-                <p><strong>Statut :</strong> <span style="color: #16a34a; font-weight: bold;">DISPONIBLE</span></p>
-            </div>
-            <p>📍 <strong>Prochaine étape :</strong> Venez récupérer votre livre à la bibliothèque.</p>
-            <p>⏰ <strong>Attention :</strong> Pensez à venir le chercher rapidement. Si vous ne le récupérez pas sous 48h, la réservation pourrait être annulée.</p>
-            <hr style="margin: 20px 0;">
-            <p style="color: #666; font-size: 12px;">LibraShelf - Votre bibliothèque en ligne</p>
-        </body>
-        </html>
-        HTML;
+        // Envoyer l'email
+        $this->mailer->send($email);
 
-        $this->sendEmail($user->getEmail(), $subject, $body);
+        // Enregistrer la notification en base
+        $this->saveNotification(
+            NotificationType::EMAIL,
+            $user->getEmail(),
+            'Votre livre est disponible !',
+            sprintf('Le livre "%s" est prêt à être récupéré', $ouvrage->getTitre())
+        );
+
+        // Marquer comme notifié
+        $reservation->setNotifiedAt(new \DateTimeImmutable());
+        $this->entityManager->flush();
     }
 
     /**
-     * Méthode privée pour envoyer l'email et enregistrer la notification
+     * Enregistre une notification en base de données.
      */
-    private function sendEmail(string $email, string $subject, string $body): void
-    {
-        $emailMessage = (new Email())
-            ->from('bibliotheque@librashelf.local')
-            ->to($email)
-            ->subject($subject)
-            ->html($body);
+    private function saveNotification(
+        NotificationType $type,
+        string $toEmail,
+        string $subject,
+        string $body
+    ): void {
+        $notification = new Notifications();
+        $notification->setType([$type]);
+        $notification->setToEmail($toEmail);
+        $notification->setSubject($subject);
+        $notification->setBody($body);
 
-        try {
-            $this->mailer->send($emailMessage);
-            
-            // Enregistrer la notification dans la base
-            $notification = new Notifications();
-            $notification->setType([NotificationType::EMAIL]);
-            $notification->setToEmail($email);
-            $notification->setSubject($subject);
-            $notification->setBody($body);
-
-            $this->entityManager->persist($notification);
-            $this->entityManager->flush();
-            
-            $this->logger->info('Email de réservation envoyé avec succès', [
-                'email' => $email,
-                'subject' => $subject
-            ]);
-        } catch (\Exception $e) {
-            $this->logger->error('Erreur lors de l\'envoi de l\'email de réservation', [
-                'email' => $email,
-                'error' => $e->getMessage()
-            ]);
-        }
+        $this->entityManager->persist($notification);
+        $this->entityManager->flush();
     }
 }
