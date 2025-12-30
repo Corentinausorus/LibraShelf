@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Service\ServiceReglesEmprunt;
 use App\Entity\Emprunt;
 use App\Entity\Reservation;
+use App\Enum\StatutEmprunt;
 use App\Form\EmpruntType;
 use App\Repository\EmpruntRepository;
 use App\Repository\ReservationRepository;
@@ -14,9 +15,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use App\Enum\StatutReservation;
 
 #[Route('/emprunt')]
-#[IsGranted('ROLE_BIBLIOTHECAIRE')]
+#[IsGranted('ROLE_LIBRARIAN')]
 final class EmpruntController extends AbstractController
 {
     #[Route('/', name: 'app_emprunt_index', methods: ['GET'])]
@@ -96,40 +98,45 @@ final class EmpruntController extends AbstractController
         Reservation $reservation,
         EntityManagerInterface $entityManager
     ): Response {
-        // Vérifier que la réservation est bien confirmée
-        if ($reservation->getStatut() !== 'confirmee') {
-            $this->addFlash('error', 'Cette réservation ne peut pas être transformée en emprunt.');
-            return $this->redirectToRoute('app_emprunt_index');
+        // Vérifier que la réservation n'est pas déjà terminée ou annulée
+        if ($reservation->getStatut() === StatutReservation::TERMINEE) {
+            $this->addFlash('error', 'Cette réservation a déjà été transformée en emprunt.');
+            return $this->redirectToRoute('librarian_loans');
         }
 
-        // Créer l'emprunt
-        $emprunt = new Emprunt();
-        $emprunt->setUtilisateur($reservation->getUtilisateur());
-        $emprunt->setLivre($reservation->getLivre());
-        $emprunt->setDateEmprunt(new \DateTimeImmutable());
-        
-        // Date de retour : 14 jours après l'emprunt
-        $dateRetourPrevue = new \DateTimeImmutable('+14 days');
-        $emprunt->setDateRetourPrevue($dateRetourPrevue);
-        
-        $emprunt->setStatut('en_cours');
+        if ($reservation->getStatut() === StatutReservation::ANNULEE) {
+            $this->addFlash('error', 'Cette réservation est annulée et ne peut pas être transformée en emprunt.');
+            return $this->redirectToRoute('librarian_loans');
+        }
 
-        // Mettre à jour le statut du livre
-        $livre = $reservation->getLivre();
-        $livre->setDisponibilite(false);
+        try {
+            // Créer l'emprunt
+            $emprunt = new Emprunt();
+            $emprunt->setUser($reservation->getUser());
+            $emprunt->setExemplaire($reservation->getExemplaire());
+            $emprunt->setStartAt(new \DateTimeImmutable());
+            
+            // Date de retour : 14 jours après l'emprunt
+            $dateRetourPrevue = new \DateTimeImmutable('+14 days');
+            $emprunt->setDueAt($dateRetourPrevue);
+            $emprunt->setStatus(StatutEmprunt::EN_COURS);
 
-        // Mettre à jour le statut de la réservation
-        $reservation->setStatut('empruntee');
+            // Marquer la réservation comme terminée
+            $reservation->complete();
 
-        $entityManager->persist($emprunt);
-        $entityManager->flush();
+            $entityManager->persist($emprunt);
+            $entityManager->flush();
 
-        $this->addFlash('success', sprintf(
-            'L\'emprunt a été créé avec succès. Date de retour prévue : %s',
-            $dateRetourPrevue->format('d/m/Y')
-        ));
+            $this->addFlash('success', sprintf(
+                'L\'emprunt a été créé avec succès pour %s. Date de retour prévue : %s',
+                $reservation->getUser()->getNom(),
+                $dateRetourPrevue->format('d/m/Y')
+            ));
+        } catch (\Exception $e) {
+            $this->addFlash('error', 'Erreur lors de la création de l\'emprunt : ' . $e->getMessage());
+        }
 
-        return $this->redirectToRoute('app_emprunt_index');
+        return $this->redirectToRoute('librarian_loans');
     }
 
     #[Route('/annuler-reservation/{id}', name: 'app_emprunt_cancel_reservation', methods: ['POST'])]
@@ -137,16 +144,21 @@ final class EmpruntController extends AbstractController
         Reservation $reservation,
         EntityManagerInterface $entityManager
     ): Response {
-        if ($reservation->getStatut() !== 'confirmee') {
-            $this->addFlash('error', 'Cette réservation ne peut pas être annulée.');
-            return $this->redirectToRoute('app_emprunt_index');
+        if ($reservation->getStatut() === StatutReservation::TERMINEE) {
+            $this->addFlash('error', 'Cette réservation a déjà été transformée en emprunt.');
+            return $this->redirectToRoute('librarian_loans');
         }
 
-        $reservation->setStatut('annulee');
+        if ($reservation->getStatut() === StatutReservation::ANNULEE) {
+            $this->addFlash('info', 'Cette réservation est déjà annulée.');
+            return $this->redirectToRoute('librarian_loans');
+        }
+
+        $reservation->cancel();
         $entityManager->flush();
 
-        $this->addFlash('info', 'La réservation a été annulée.');
+        $this->addFlash('info', 'La réservation a été annulée avec succès.');
 
-        return $this->redirectToRoute('app_emprunt_index');
+        return $this->redirectToRoute('librarian_loans');
     }
 }

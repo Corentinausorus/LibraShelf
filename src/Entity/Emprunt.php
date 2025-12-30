@@ -27,7 +27,7 @@ class Emprunt
     #[ORM\Column]
     private ?\DateTimeImmutable $dueAt = null;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $returnedAt = null;
 
     #[ORM\Column(nullable: true)]
@@ -94,7 +94,7 @@ class Emprunt
         return $this->returnedAt;
     }
 
-    public function setReturnedAt(\DateTimeImmutable $returnedAt): static
+    public function setReturnedAt(?\DateTimeImmutable $returnedAt): static
     {
         $this->returnedAt = $returnedAt;
 

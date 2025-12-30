@@ -38,21 +38,26 @@
     {% if reservations is empty %}
         <div class="alert alert-info">
             <i class="bi bi-info-circle"></i>
-            Aucune réservation en attente de transformation en emprunt.
+            Aucune réservation active à transformer en emprunt.
         </div>
     {% else %}
         <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-list-check"></i> Réservations actives ({{ reservations|length }})
+                </h5>
+            </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead class="table-light">
                             <tr>
-                                <th>Ouvrage</th>
-                                <th>Emprunteur</th>
-                                <th>Date de création</th>
-                                <th>Statut</th>
-                                <th>Email</th>
-                                <th>Actions</th>
+                                <th style="color: #212529;">Ouvrage</th>
+                                <th style="color: #212529;">Emprunteur</th>
+                                <th style="color: #212529;">Date de création</th>
+                                <th style="color: #212529;">Statut</th>
+                                <th style="color: #212529;">Email</th>
+                                <th style="color: #212529;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -71,13 +76,19 @@
                                 <td>{{ reservation.user.nom }}</td>
                                 <td>{{ reservation.creationDate|date('d/m/Y H:i') }}</td>
                                 <td>
-                                    <span class="badge bg-{{ reservation.statut.value == 'disponible' or reservation.statut.value == 'a_recuperer' ? 'success' : 'info' }}">
+                                    {% set statusColor = 'info' %}
+                                    {% if reservation.statut.value == 'disponible' or reservation.statut.value == 'a_recuperer' %}
+                                        {% set statusColor = 'success' %}
+                                    {% elseif reservation.statut.value == 'en_attente' %}
+                                        {% set statusColor = 'warning' %}
+                                    {% endif %}
+                                    <span class="badge bg-{{ statusColor }}">
                                         {{ reservation.statut.value|upper|replace({'_': ' '}) }}
                                     </span>
                                 </td>
                                 <td>
-                                    <a href="mailto:{{ reservation.user.email }}">
-                                        {{ reservation.user.email }}
+                                    <a href="mailto:{{ reservation.user.email }}" class="text-decoration-none">
+                                        <i class="bi bi-envelope"></i> {{ reservation.user.email }}
                                     </a>
                                 </td>
                                 <td>
@@ -85,8 +96,9 @@
                                         <form method="post" 
                                               action="{{ path('app_emprunt_create', {'id': reservation.id}) }}" 
                                               class="d-inline"
-                                              onsubmit="return confirm('Confirmer la création de l\'emprunt ?');">
-                                            <button type="submit" class="btn btn-success btn-sm">
+                                              onsubmit="return confirm('Confirmer la création de l\'emprunt pour {{ reservation.user.nom }} ?');">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('emprunt_create_' ~ reservation.id) }}">
+                                            <button type="submit" class="btn btn-success btn-sm" title="Créer l'emprunt">
                                                 <i class="bi bi-check-circle"></i> Créer emprunt
                                             </button>
                                         </form>
@@ -94,8 +106,9 @@
                                         <form method="post" 
                                               action="{{ path('app_emprunt_cancel_reservation', {'id': reservation.id}) }}" 
                                               class="d-inline"
-                                              onsubmit="return confirm('Annuler cette réservation ?');">
-                                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                              onsubmit="return confirm('Êtes-vous sûr de vouloir annuler cette réservation ?');">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('reservation_cancel_' ~ reservation.id) }}">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Annuler la réservation">
                                                 <i class="bi bi-x-circle"></i> Annuler
                                             </button>
                                         </form>
@@ -114,6 +127,11 @@
 <style>
     .table th {
         font-weight: 600;
+        color: #212529 !important;
+    }
+    
+    .table-light {
+        background-color: #e9ecef !important;
     }
     
     .btn-group {

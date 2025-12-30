@@ -47,8 +47,15 @@ final class LibrarianController extends AbstractController
     #[Route('/loans', name: 'librarian_loans')]
     public function manageLoans(ReservationRepository $reservationRepository): Response
     {
-        // Récupérer toutes les réservations (ou ajustez selon vos statuts)
-        $reservations = $reservationRepository->findAll();
+        // Récupérer uniquement les réservations actives (non empruntées)
+        $reservations = $reservationRepository->createQueryBuilder('r')
+            ->where('r.statut != :terminee')
+            ->andWhere('r.statut != :annulee')
+            ->setParameter('terminee', \App\Enum\StatutReservation::TERMINEE)
+            ->setParameter('annulee', \App\Enum\StatutReservation::ANNULEE)
+            ->orderBy('r.creationDate', 'DESC')
+            ->getQuery()
+            ->getResult();
 
         return $this->render('librarian/loans.html.twig', [
             'reservations' => $reservations,
