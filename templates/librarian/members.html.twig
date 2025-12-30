@@ -11,18 +11,110 @@
         <p class="lead text-muted">Consultez et gérez les membres de votre bibliothèque</p>
     </div>
 
-    <div class="card">
-        <div class="card-body text-center py-5">
-            <i class="bi bi-hourglass-split" style="font-size: 4rem; color: #10b981;"></i>
-            <h3 class="mt-4 mb-2" style="color: #10b981;">Fonctionnalité en cours de développement</h3>
-            <p class="text-muted mb-4">Cette fonctionnalité sera bientôt disponible.</p>
+    {% if members is empty %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Aucun membre enregistré pour le moment.
         </div>
-    </div>
+    {% else %}
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-list-check"></i> Liste des membres ({{ members|length }})
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="color: #212529;" class="ps-4">ID</th>
+                                <th style="color: #212529;">Nom</th>
+                                <th style="color: #212529;">Email</th>
+                                <th style="color: #212529;">Rôle</th>
+                                <th style="color: #212529;">Réservations</th>
+                                <th style="color: #212529;">Emprunts</th>
+                                <th style="color: #212529;" class="text-end pe-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for member in members %}
+                            <tr>
+                                <td class="ps-4">{{ member.id }}</td>
+                                <td class="fw-bold">{{ member.nom }}</td>
+                                <td>
+                                    <a href="mailto:{{ member.email }}" class="text-decoration-none">
+                                        <i class="bi bi-envelope"></i> {{ member.email }}
+                                    </a>
+                                </td>
+                                <td>
+                                    {% set roleColor = 'secondary' %}
+                                    {% set roleLabel = member.role %}
+                                    
+                                    {% if member.role == 'ROLE_ADMIN' %}
+                                        {% set roleColor = 'danger' %}
+                                        {% set roleLabel = 'Administrateur' %}
+                                    {% elseif member.role == 'ROLE_LIBRARIAN' %}
+                                        {% set roleColor = 'primary' %}
+                                        {% set roleLabel = 'Bibliothécaire' %}
+                                    {% elseif member.role == 'ROLE_MEMBER' %}
+                                        {% set roleColor = 'success' %}
+                                        {% set roleLabel = 'Membre' %}
+                                    {% endif %}
+                                    
+                                    <span class="badge bg-{{ roleColor }}">{{ roleLabel }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">
+                                        {{ member.reservations|length }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-warning text-dark">
+                                        {{ member.emprunts|length }}
+                                    </span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{{ path('librarian_member_detail', {id: member.id}) }}" 
+                                           class="btn btn-outline-primary"
+                                           title="Voir les détails">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 
-    <div class="mt-4 text-center">
+    <div class="mt-4">
         <a href="{{ path('librarian_dashboard') }}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left"></i> Retour au tableau de bord
         </a>
     </div>
 </div>
+
+<style>
+    .table thead th {
+        color: #212529 !important;
+        background-color: #e9ecef !important;
+        font-weight: 600;
+    }
+    
+    .table-light {
+        background-color: #e9ecef !important;
+    }
+    
+    .btn-group {
+        gap: 0.25rem;
+    }
+    
+    .card {
+        border: none;
+    }
+</style>
 {% endblock %}

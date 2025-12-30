@@ -148,13 +148,40 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    
-
     /**
      * @return Collection<int, Reservation>
      */
     public function getReservations(): Collection
     {
         return $this->reservations;
+    }
+
+    /**
+     * @return Collection<int, Emprunt>
+     */
+    public function getEmprunts(): Collection
+    {
+        return $this->emprunts;
+    }
+
+    public function addEmprunt(Emprunt $emprunt): static
+    {
+        if (!$this->emprunts->contains($emprunt)) {
+            $this->emprunts->add($emprunt);
+            $emprunt->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeEmprunt(Emprunt $emprunt): static
+    {
+        if ($this->emprunts->removeElement($emprunt)) {
+            if ($emprunt->getUser() === $this) {
+                $emprunt->setUser(null);
+            }
+        }
+
+        return $this;
     }
 }

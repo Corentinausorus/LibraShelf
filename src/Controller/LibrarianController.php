@@ -3,10 +3,12 @@
 namespace App\Controller;
 
 use App\Repository\ReservationRepository;
+use App\Repository\UserRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use App\Entity\User;
 
 /**
  * Contrôleur principal pour l'espace bibliothécaire.
@@ -66,9 +68,14 @@ final class LibrarianController extends AbstractController
      * Affiche la vue de gestion des membres.
      */
     #[Route('/members', name: 'librarian_members')]
-    public function manageMembers(): Response
+    public function manageMembers(UserRepository $userRepository): Response
     {
-        return $this->render('librarian/members.html.twig');
+        // Récupérer tous les utilisateurs
+        $members = $userRepository->findAll();
+
+        return $this->render('librarian/members.html.twig', [
+            'members' => $members,
+        ]);
     }
 
     /**
@@ -79,6 +86,17 @@ final class LibrarianController extends AbstractController
     {
         return $this->render('librarian/reservations.html.twig', [
             'reservations' => $reservationRepository->findAll(),
+        ]);
+    }
+
+    /**
+     * Affiche les détails d'un membre.
+     */
+    #[Route('/members/{id}', name: 'librarian_member_detail')]
+    public function memberDetail(User $member): Response
+    {
+        return $this->render('librarian/member_detail.html.twig', [
+            'member' => $member,
         ]);
     }
 }
