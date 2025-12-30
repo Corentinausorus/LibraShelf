@@ -45,13 +45,14 @@ enum EtatExemplaire: string
 
     /**
      * Retourne tous les états disponibles pour un formulaire.
-     * @return array<string, string>
+     * Format : ['Neuf' => EtatExemplaire::NEUF, ...]
+     * @return array<string, EtatExemplaire>
      */
     public static function getChoices(): array
     {
         $choices = [];
         foreach (self::cases() as $case) {
-            $choices[$case->getLabel()] = $case->value;
+            $choices[$case->getLabel()] = $case;
         }
         return $choices;
     }

@@ -21,7 +21,7 @@ class Tags
     /**
      * @var Collection<int, Ouvrage>
      */
-    #[ORM\ManyToMany(targetEntity: Ouvrage::class, inversedBy: 'tags')]
+    #[ORM\ManyToMany(targetEntity: Ouvrage::class, mappedBy: 'tags')]
     private Collection $ouvrages;
 
     public function __construct()

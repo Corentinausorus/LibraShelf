@@ -37,7 +37,7 @@ class Exemplaires
     #[ORM\OneToMany(targetEntity: HistoriqueInventaire::class, mappedBy: 'exemplaires')]
     private Collection $historiqueInventaires;
 
-    #[ORM\OneToOne(mappedBy: 'exemplaire', cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(inversedBy: 'exemplaire', cascade: ['persist', 'remove'])]
     private ?Emprunt $emprunt = null;
 
     public function __construct()

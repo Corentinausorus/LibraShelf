@@ -97,11 +97,10 @@ class OuvrageType extends AbstractType
                 'mapped' => false
             ])
             ->add('annee', DateType::class, [
-                'label' => 'Année de publication',
                 'widget' => 'single_text',
-                'attr' => ['class' => 'form-control'],
+                'label' => 'Année de publication',
                 'required' => false,
-                'mapped' => false
+                'input' => 'datetime_immutable', // FIX ICI : forcer DateTimeImmutable
             ])
             ->add('Resume', TextareaType::class, [
                 'label' => 'Résumé',

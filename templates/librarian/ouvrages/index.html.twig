@@ -107,31 +107,6 @@
                                         </div>
                                     </td>
                                 </tr>
-
-                                {# Modal de confirmation de suppression #}
-                                <div class="modal fade" id="deleteModal{{ ouvrage.id }}" tabindex="-1">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">Confirmer la suppression</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                Êtes-vous sûr de vouloir supprimer l'ouvrage <strong>{{ ouvrage.titre }}</strong> ?
-                                                Cette action est irréversible.
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                                                <form method="post" action="{{ path('librarian_ouvrage_delete', {id: ouvrage.id}) }}" class="d-inline">
-                                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ ouvrage.id) }}">
-                                                    <button type="submit" class="btn btn-danger">
-                                                        <i class="bi bi-trash"></i> Supprimer
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -150,4 +125,38 @@
         </a>
     </div>
 </div>
+
+{# Modals de confirmation HORS du container pour éviter les problèmes de z-index #}
+{% for ouvrage in ouvrages %}
+    <div class="modal fade" id="deleteModal{{ ouvrage.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ ouvrage.id }}" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="deleteModalLabel{{ ouvrage.id }}">
+                        <i class="bi bi-exclamation-triangle"></i> Confirmer la suppression
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Êtes-vous sûr de vouloir supprimer l'ouvrage :</p>
+                    <p class="text-center"><strong class="text-danger">{{ ouvrage.titre }}</strong></p>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> Cette action est <strong>irréversible</strong>.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Annuler
+                    </button>
+                    <form method="post" action="{{ path('librarian_ouvrage_delete', {id: ouvrage.id}) }}" style="display:inline;">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ ouvrage.id) }}">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Supprimer définitivement
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endfor %}
 {% endblock %}
