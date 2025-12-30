@@ -1,28 +1,127 @@
+{# filepath: c:\Users\Meersseman Gilles\OneDrive\Documents\GitHub\LibraShelf\templates\librarian\loans.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block title %}Emprunts - Bibliothécaire{% endblock %}
+{% block title %}Gestion des Emprunts{% endblock %}
 
 {% block body %}
-<div class="container py-5">
-    <div class="mb-5 text-center">
-        <h1 class="display-5 fw-bold mb-3" style="color: #10b981;">
-            <i class="bi bi-arrow-left-right"></i> Gestion des Emprunts
-        </h1>
-        <p class="lead text-muted">Suivez et gérez tous les emprunts de la bibliothèque</p>
-    </div>
-
-    <div class="card">
-        <div class="card-body text-center py-5">
-            <i class="bi bi-hourglass-split" style="font-size: 4rem; color: #10b981;"></i>
-            <h3 class="mt-4 mb-2" style="color: #10b981;">Fonctionnalité en cours de développement</h3>
-            <p class="text-muted mb-4">Cette fonctionnalité sera bientôt disponible.</p>
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="mb-3">
+                <i class="bi bi-book-half"></i> Gestion des Emprunts
+            </h1>
+            <p class="text-muted">Transformez les réservations en emprunts</p>
         </div>
     </div>
 
-    <div class="mt-4 text-center">
-        <a href="{{ path('librarian_dashboard') }}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Retour au tableau de bord
-        </a>
-    </div>
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill"></i> {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i> {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+
+    {% for message in app.flashes('info') %}
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="bi bi-info-circle-fill"></i> {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+
+    {% if reservations is empty %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            Aucune réservation en attente de transformation en emprunt.
+        </div>
+    {% else %}
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Ouvrage</th>
+                                <th>Emprunteur</th>
+                                <th>Date de création</th>
+                                <th>Statut</th>
+                                <th>Email</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for reservation in reservations %}
+                            <tr>
+                                <td>
+                                    <strong>{{ reservation.ouvrage.titre }}</strong><br>
+                                    <small class="text-muted">
+                                        {% if reservation.ouvrage.auteurs|length > 0 %}
+                                            {{ reservation.ouvrage.auteurs|map(a => a.nom)|join(', ') }}
+                                        {% else %}
+                                            Auteur non renseigné
+                                        {% endif %}
+                                    </small>
+                                </td>
+                                <td>{{ reservation.user.nom }}</td>
+                                <td>{{ reservation.creationDate|date('d/m/Y H:i') }}</td>
+                                <td>
+                                    <span class="badge bg-{{ reservation.statut.value == 'disponible' or reservation.statut.value == 'a_recuperer' ? 'success' : 'info' }}">
+                                        {{ reservation.statut.value|upper|replace({'_': ' '}) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="mailto:{{ reservation.user.email }}">
+                                        {{ reservation.user.email }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <form method="post" 
+                                              action="{{ path('app_emprunt_create', {'id': reservation.id}) }}" 
+                                              class="d-inline"
+                                              onsubmit="return confirm('Confirmer la création de l\'emprunt ?');">
+                                            <button type="submit" class="btn btn-success btn-sm">
+                                                <i class="bi bi-check-circle"></i> Créer emprunt
+                                            </button>
+                                        </form>
+                                        
+                                        <form method="post" 
+                                              action="{{ path('app_emprunt_cancel_reservation', {'id': reservation.id}) }}" 
+                                              class="d-inline"
+                                              onsubmit="return confirm('Annuler cette réservation ?');">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                <i class="bi bi-x-circle"></i> Annuler
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 </div>
+
+<style>
+    .table th {
+        font-weight: 600;
+    }
+    
+    .btn-group {
+        gap: 0.25rem;
+    }
+    
+    .card {
+        border: none;
+    }
+</style>
 {% endblock %}

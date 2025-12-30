@@ -45,9 +45,14 @@ final class LibrarianController extends AbstractController
      * Affiche la vue de gestion des emprunts.
      */
     #[Route('/loans', name: 'librarian_loans')]
-    public function manageLoans(): Response
+    public function manageLoans(ReservationRepository $reservationRepository): Response
     {
-        return $this->render('librarian/loans.html.twig');
+        // Récupérer toutes les réservations (ou ajustez selon vos statuts)
+        $reservations = $reservationRepository->findAll();
+
+        return $this->render('librarian/loans.html.twig', [
+            'reservations' => $reservations,
+        ]);
     }
 
     /**

@@ -4,22 +4,32 @@ namespace App\Controller;
 
 use App\Service\ServiceReglesEmprunt;
 use App\Entity\Emprunt;
+use App\Entity\Reservation;
 use App\Form\EmpruntType;
 use App\Repository\EmpruntRepository;
+use App\Repository\ReservationRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/emprunt')]
+#[IsGranted('ROLE_BIBLIOTHECAIRE')]
 final class EmpruntController extends AbstractController
 {
-    #[Route(name: 'app_emprunt_index', methods: ['GET'])]
-    public function index(EmpruntRepository $empruntRepository): Response
+    #[Route('/', name: 'app_emprunt_index', methods: ['GET'])]
+    public function index(ReservationRepository $reservationRepository): Response
     {
-        return $this->render('member/loans.html.twig', [
-            'emprunts' => $empruntRepository->findAll(),
+        // Récupérer toutes les réservations confirmées (prêtes à être transformées en emprunts)
+        $reservations = $reservationRepository->findBy(
+            ['statut' => 'confirmee'],
+            ['dateReservation' => 'DESC']
+        );
+
+        return $this->render('librarian/loans.html.twig', [
+            'reservations' => $reservations,
         ]);
     }
 
@@ -79,5 +89,64 @@ final class EmpruntController extends AbstractController
         }
 
         return $this->redirectToRoute('app_emprunt_index', [], Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/creer/{id}', name: 'app_emprunt_create', methods: ['POST'])]
+    public function create(
+        Reservation $reservation,
+        EntityManagerInterface $entityManager
+    ): Response {
+        // Vérifier que la réservation est bien confirmée
+        if ($reservation->getStatut() !== 'confirmee') {
+            $this->addFlash('error', 'Cette réservation ne peut pas être transformée en emprunt.');
+            return $this->redirectToRoute('app_emprunt_index');
+        }
+
+        // Créer l'emprunt
+        $emprunt = new Emprunt();
+        $emprunt->setUtilisateur($reservation->getUtilisateur());
+        $emprunt->setLivre($reservation->getLivre());
+        $emprunt->setDateEmprunt(new \DateTimeImmutable());
+        
+        // Date de retour : 14 jours après l'emprunt
+        $dateRetourPrevue = new \DateTimeImmutable('+14 days');
+        $emprunt->setDateRetourPrevue($dateRetourPrevue);
+        
+        $emprunt->setStatut('en_cours');
+
+        // Mettre à jour le statut du livre
+        $livre = $reservation->getLivre();
+        $livre->setDisponibilite(false);
+
+        // Mettre à jour le statut de la réservation
+        $reservation->setStatut('empruntee');
+
+        $entityManager->persist($emprunt);
+        $entityManager->flush();
+
+        $this->addFlash('success', sprintf(
+            'L\'emprunt a été créé avec succès. Date de retour prévue : %s',
+            $dateRetourPrevue->format('d/m/Y')
+        ));
+
+        return $this->redirectToRoute('app_emprunt_index');
+    }
+
+    #[Route('/annuler-reservation/{id}', name: 'app_emprunt_cancel_reservation', methods: ['POST'])]
+    public function cancelReservation(
+        Reservation $reservation,
+        EntityManagerInterface $entityManager
+    ): Response {
+        if ($reservation->getStatut() !== 'confirmee') {
+            $this->addFlash('error', 'Cette réservation ne peut pas être annulée.');
+            return $this->redirectToRoute('app_emprunt_index');
+        }
+
+        $reservation->setStatut('annulee');
+        $entityManager->flush();
+
+        $this->addFlash('info', 'La réservation a été annulée.');
+
+        return $this->redirectToRoute('app_emprunt_index');
     }
 }
