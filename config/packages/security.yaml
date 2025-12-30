@@ -36,6 +36,11 @@ security:
             # https://symfony.com/doc/current/security/impersonating_user.html
             # switch_user: true
 
+    # Hiérarchie des rôles : Admin > Librarian > Member
+    role_hierarchy:
+        ROLE_LIBRARIAN: [ROLE_MEMBER]
+        ROLE_ADMIN: [ROLE_LIBRARIAN, ROLE_MEMBER]
+
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:

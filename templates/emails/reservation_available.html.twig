@@ -1,45 +1,10 @@
 {# filepath: c:\Users\Meersseman Gilles\OneDrive\Documents\GitHub\LibraShelf\templates\emails\reservation_available.html.twig #}
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="UTF-8">
-    <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background-color: #28a745; color: white; padding: 20px; text-align: center; }
-        .content { background-color: #f8f9fa; padding: 20px; margin: 20px 0; }
-        .highlight { background-color: #d4edda; padding: 15px; border-left: 4px solid #28a745; margin: 15px 0; }
-        .footer { text-align: center; color: #666; font-size: 12px; }
-    </style>
-</head>
+<head><meta charset="UTF-8"></head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🎉 Bonne nouvelle !</h1>
-            <p>Votre livre est disponible</p>
-        </div>
-
-        <div class="content">
-            <h2>Bonjour {{ user.nom }},</h2>
-            
-            <p>Le livre que vous avez réservé est maintenant disponible !</p>
-
-            <div class="highlight">
-                <p style="margin: 0;"><strong>📖 {{ ouvrage.titre }}</strong></p>
-                {% if ouvrage.auteurs|length > 0 %}
-                    <p style="margin: 5px 0 0 0;">Par {{ ouvrage.auteurs|map(a => a.nom)|join(', ') }}</p>
-                {% endif %}
-            </div>
-
-            <p><strong>⏰ Vous avez 48 heures pour venir le chercher.</strong></p>
-            
-            <p>Passé ce délai, la réservation sera annulée et le livre sera proposé à la personne suivante dans la file d'attente.</p>
-        </div>
-
-        <div class="footer">
-            <p>Cet email a été envoyé automatiquement par LibraShelf.</p>
-            <p>Bibliothèque LibraShelf - bibliotheque@librashelf.fr</p>
-        </div>
-    </div>
+    <h1>Livre disponible</h1>
+    <p>Bonjour {{ user.nom }},</p>
+    <p>Le livre "{{ ouvrage.titre }}" est disponible.</p>
 </body>
 </html>

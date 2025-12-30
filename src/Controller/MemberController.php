@@ -95,7 +95,7 @@ final class MemberController extends AbstractController
         // Calculer la position dans la file pour chaque réservation en attente
         $queuePositions = [];
         foreach ($reservations as $reservation) {
-            if ($reservation->getStatut() === 'en_attente' && $reservation->getOuvrage()) {
+            if ($reservation->getStatut() === StatutReservation::EN_ATTENTE && $reservation->getOuvrage()) {
                 $position = $reservationRepository->getPositionInQueue(
                     $reservation->getOuvrage(),
                     $user
