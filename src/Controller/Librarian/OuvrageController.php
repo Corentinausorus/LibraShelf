@@ -5,6 +5,7 @@ namespace App\Controller\Librarian;
 use App\Entity\Ouvrage;
 use App\Form\OuvrageType;
 use App\Repository\OuvrageRepository;
+use App\Repository\CategorieRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,7 +22,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  * - Modification d'un ouvrage existant
  * - Suppression d'un ouvrage
  */
-#[Route('/librarian/ouvrage')]
+#[Route('/librarian/ouvrages')]
 #[IsGranted('ROLE_LIBRARIAN')]
 final class OuvrageController extends AbstractController
 {
@@ -34,11 +35,42 @@ final class OuvrageController extends AbstractController
     /**
      * Affiche la liste de tous les ouvrages.
      */
-    #[Route('s', name: 'librarian_ouvrages')]
-    public function index(): Response
-    {
+    #[Route('', name: 'librarian_ouvrages', methods: ['GET'])]
+    public function index(
+        Request $request,
+        OuvrageRepository $ouvrageRepository,
+        CategorieRepository $categorieRepository
+    ): Response {
+        // Récupération des filtres depuis la requête
+        $filters = [
+            'titre' => $request->query->get('titre', ''),
+            'categorie' => $request->query->get('categorie', ''),
+            'langue' => $request->query->get('langue', ''),
+            'annee' => $request->query->get('annee', ''),
+            'disponible' => $request->query->get('disponible', ''),
+        ];
+
+        // Recherche avec filtres ou récupération de tous les ouvrages
+        $hasFilters = array_filter($filters, fn($value) => $value !== '');
+        
+        if ($hasFilters) {
+            $ouvrages = $ouvrageRepository->searchWithFilters($filters);
+        } else {
+            $ouvrages = $ouvrageRepository->findAll();
+        }
+
+        // Récupération des données pour les filtres
+        $categories = $categorieRepository->findAll();
+        $langues = $ouvrageRepository->findAllLangues();
+        $annees = $ouvrageRepository->findAllAnnees();
+
         return $this->render('librarian/ouvrages/index.html.twig', [
-            'ouvrages' => $this->ouvrageRepository->findAll(),
+            'ouvrages' => $ouvrages,
+            'categories' => $categories,
+            'langues' => $langues,
+            'annees' => $annees,
+            'filters' => $filters,
+            'resultCount' => count($ouvrages),
         ]);
     }
 

@@ -10,7 +10,7 @@
                 <h1 class="display-6 fw-bold mb-2" style="color: #10b981;">
                     <i class="bi bi-book-fill"></i> Gestion des Ouvrages
                 </h1>
-                <p class="text-muted mb-0">Gérez le catalogue de la bibliothèque</p>
+                <p class="text-muted mb-0">Gérez le catalogue de la bibliothèque avec filtres de recherche</p>
             </div>
             <a href="{{ path('librarian_ouvrage_new') }}" class="btn btn-primary btn-lg">
                 <i class="bi bi-plus-circle"></i> Nouvel ouvrage
@@ -27,6 +27,87 @@
         {% endfor %}
     {% endfor %}
 
+    {# Formulaire de recherche et filtres #}
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-funnel"></i> Recherche et filtres</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" action="{{ path('librarian_ouvrages') }}" class="row g-3">
+                {# Recherche par titre #}
+                <div class="col-md-6">
+                    <label for="titre" class="form-label">Titre</label>
+                    <input type="text" 
+                           class="form-control" 
+                           id="titre" 
+                           name="titre" 
+                           placeholder="Rechercher par titre..."
+                           value="{{ filters.titre }}">
+                </div>
+
+                {# Filtre par catégorie #}
+                <div class="col-md-6">
+                    <label for="categorie" class="form-label">Catégorie</label>
+                    <select class="form-select" id="categorie" name="categorie">
+                        <option value="">Toutes les catégories</option>
+                        {% for categorie in categories %}
+                            <option value="{{ categorie.id }}" {% if filters.categorie == categorie.id %}selected{% endif %}>
+                                {{ categorie.nom }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                {# Filtre par langue #}
+                <div class="col-md-4">
+                    <label for="langue" class="form-label">Langue</label>
+                    <select class="form-select" id="langue" name="langue">
+                        <option value="">Toutes les langues</option>
+                        {% for langue in langues %}
+                            <option value="{{ langue }}" {% if filters.langue == langue %}selected{% endif %}>
+                                {{ langue }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                {# Filtre par année #}
+                <div class="col-md-4">
+                    <label for="annee" class="form-label">Année de publication</label>
+                    <select class="form-select" id="annee" name="annee">
+                        <option value="">Toutes les années</option>
+                        {% for annee in annees %}
+                            <option value="{{ annee }}" {% if filters.annee == annee %}selected{% endif %}>
+                                {{ annee }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                {# Filtre par disponibilité #}
+                <div class="col-md-4">
+                    <label for="disponible" class="form-label">Disponibilité</label>
+                    <select class="form-select" id="disponible" name="disponible">
+                        <option value="">Tous</option>
+                        <option value="1" {% if filters.disponible == '1' %}selected{% endif %}>Disponible</option>
+                        <option value="0" {% if filters.disponible == '0' %}selected{% endif %}>Non disponible</option>
+                    </select>
+                </div>
+
+                {# Boutons d'action #}
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i> Rechercher
+                    </button>
+                    <a href="{{ path('librarian_ouvrages') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-clockwise"></i> Réinitialiser
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {# Liste des ouvrages #}
     {% if ouvrages is empty %}
         <div class="card">
             <div class="card-body text-center py-5">
@@ -40,6 +121,10 @@
         </div>
     {% else %}
         <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Résultats</h5>
+                <span class="badge bg-secondary">{{ resultCount }} ouvrage(s)</span>
+            </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">

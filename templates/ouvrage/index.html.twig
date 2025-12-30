@@ -154,8 +154,8 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if ouvrage.année %}
-                                        {{ ouvrage.année|date('Y') }}
+                                    {% if ouvrage.annee %}
+                                        {{ ouvrage.annee|date('Y') }}
                                     {% else %}
                                         <em class="text-muted">-</em>
                                     {% endif %}
@@ -248,7 +248,7 @@
                             {% for exemplaire in ouvrage.exemplaires %}
                                 <li>
                                     Cote: {{ exemplaire.cote }} - 
-                                    État: {{ exemplaire.etat }} - 
+                                    État: {{ exemplaire.etat.label }} - 
                                     {% if exemplaire.disponible %}
                                         <span class="badge bg-success">Disponible</span>
                                     {% else %}
