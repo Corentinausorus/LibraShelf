@@ -5,28 +5,22 @@ namespace App\Enum;
 enum EtatExemplaire: string
 {
     case NEUF = 'neuf';
-    case EXCELLENT = 'excellent';
     case BON = 'bon';
-    case CORRECT = 'correct';
-    case USE = 'usé';
-    case ENDOMMAGE = 'endommagé';
-    case TRES_MAUVAIS = 'très_mauvais';
-    case A_REPARER = 'à_réparer';
+    case MOYEN = 'moyen';
+    case MAUVAIS = 'mauvais';
+    case DETERIORE = 'deteriore';
 
     /**
-     * Retourne le libellé en français.
+     * Retourne le label lisible de l'état.
      */
     public function getLabel(): string
     {
         return match($this) {
             self::NEUF => 'Neuf',
-            self::EXCELLENT => 'Excellent',
-            self::BON => 'Bon',
-            self::CORRECT => 'Correct',
-            self::USE => 'Usé',
-            self::ENDOMMAGE => 'Endommagé',
-            self::TRES_MAUVAIS => 'Très mauvais',
-            self::A_REPARER => 'À réparer',
+            self::BON => 'Bon état',
+            self::MOYEN => 'État moyen',
+            self::MAUVAIS => 'Mauvais état',
+            self::DETERIORE => 'Détérioré',
         };
     }
 
@@ -36,24 +30,11 @@ enum EtatExemplaire: string
     public function getBadgeClass(): string
     {
         return match($this) {
-            self::NEUF, self::EXCELLENT => 'bg-success',
-            self::BON, self::CORRECT => 'bg-info',
-            self::USE => 'bg-warning',
-            self::ENDOMMAGE, self::TRES_MAUVAIS, self::A_REPARER => 'bg-danger',
+            self::NEUF => 'bg-success',
+            self::BON => 'bg-primary',
+            self::MOYEN => 'bg-warning',
+            self::MAUVAIS => 'bg-danger',
+            self::DETERIORE => 'bg-dark',
         };
-    }
-
-    /**
-     * Retourne tous les états disponibles pour un formulaire.
-     * Format : ['Neuf' => EtatExemplaire::NEUF, ...]
-     * @return array<string, EtatExemplaire>
-     */
-    public static function getChoices(): array
-    {
-        $choices = [];
-        foreach (self::cases() as $case) {
-            $choices[$case->getLabel()] = $case;
-        }
-        return $choices;
     }
 }

@@ -24,11 +24,15 @@ final class EmpruntController extends AbstractController
     #[Route('/', name: 'app_emprunt_index', methods: ['GET'])]
     public function index(ReservationRepository $reservationRepository): Response
     {
-        // Récupérer toutes les réservations confirmées (prêtes à être transformées en emprunts)
-        $reservations = $reservationRepository->findBy(
-            ['statut' => 'confirmee'],
-            ['dateReservation' => 'DESC']
-        );
+        // Récupérer toutes les réservations actives (non terminées et non annulées)
+        $reservations = $reservationRepository->createQueryBuilder('r')
+            ->where('r.statut != :terminee')
+            ->andWhere('r.statut != :annulee')
+            ->setParameter('terminee', StatutReservation::TERMINEE)
+            ->setParameter('annulee', StatutReservation::ANNULEE)
+            ->orderBy('r.creationDate', 'DESC')
+            ->getQuery()
+            ->getResult();
 
         return $this->render('librarian/loans.html.twig', [
             'reservations' => $reservations,
