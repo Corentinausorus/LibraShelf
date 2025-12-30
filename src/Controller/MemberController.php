@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Enum\StatutReservation;
+use App\Repository\EmpruntRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
@@ -79,10 +80,19 @@ final class MemberController extends AbstractController
 
     #[Route('/member/loans', name: 'member_loans')]
     #[IsGranted('ROLE_MEMBER')]
-    public function myLoans(): Response
+    public function myLoans(EmpruntRepository $empruntRepository): Response
     {
-        // Mes emprunts en cours
-        return $this->render('member/loans.html.twig');
+        $user = $this->getUser();
+        
+        // Récupérer tous les emprunts de l'utilisateur
+        $loans = $empruntRepository->findBy(
+            ['User' => $user],
+            ['startAt' => 'DESC']
+        );
+
+        return $this->render('member/loans.html.twig', [
+            'loans' => $loans,
+        ]);
     }
 
     #[Route('/member/reservations', name: 'member_reservations')]

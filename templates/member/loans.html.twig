@@ -11,8 +11,6 @@
         <p class="lead text-muted">Suivez l'état de vos emprunts en cours</p>
     </div>
 
-    {% set loans = loans|default([]) %}
-
     {% if loans is empty %}
         <div class="card">
             <div class="card-body text-center py-5">
@@ -29,82 +27,77 @@
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
-                        <thead style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
+                        <thead class="table-light">
                             <tr>
-                                <th class="ps-4">Ouvrage</th>
-                                <th>Exemplaire / Cote</th>
-                                <th>Emprunté le</th>
-                                <th>Échéance</th>
-                                <th>Statut</th>
-                                <th class="text-end pe-4">Actions</th>
+                                <th class="ps-4" style="color: #212529;">Ouvrage</th>
+                                <th style="color: #212529;">Exemplaire / Cote</th>
+                                <th style="color: #212529;">Emprunté le</th>
+                                <th style="color: #212529;">Échéance</th>
+                                <th style="color: #212529;">Statut</th>
+                                <th class="text-end pe-4" style="color: #212529;">Retour</th>
                             </tr>
                         </thead>
-                <tbody>
-                {% for loan in loans %}
-                    {# Déduire le titre de l'ouvrage (essayer plusieurs chemins courants) #}
-                    {% set titre = (loan.exemplaire is defined and loan.exemplaire and loan.exemplaire.ouvrage) 
-                        ? loan.exemplaire.ouvrage.titre 
-                        : (loan.ouvrage is defined and loan.ouvrage ? loan.ouvrage.titre : '—') %}
-                    {% set cote = (loan.exemplaire is defined and loan.exemplaire and loan.exemplaire.cote) ? loan.exemplaire.cote : (loan.cote|default('—')) %}
-
-                    <tr>
-                        <td class="ps-4 fw-bold">{{ titre }}</td>
-                        <td><span class="badge bg-light text-dark border">{{ cote }}</span></td>
-
-                        {# Dates : essayer plusieurs noms possibles #}
-                        <td>
-                            {% if loan.dateEmprunt is defined and loan.dateEmprunt %}
-                                {{ loan.dateEmprunt|date('d/m/Y') }}
-                            {% elseif loan.dateDebut is defined and loan.dateDebut %}
-                                {{ loan.dateDebut|date('d/m/Y') }}
-                            {% else %}
-                                —
-                            {% endif %}
-                        </td>
-
-                        <td>
-                            {% if loan.dateEcheance is defined and loan.dateEcheance %}
-                                {{ loan.dateEcheance|date('d/m/Y') }}
-                            {% elseif loan.dateRetourPrevue is defined and loan.dateRetourPrevue %}
-                                {{ loan.dateRetourPrevue|date('d/m/Y') }}
-                            {% else %}
-                                —
-                            {% endif %}
-                        </td>
-
-                        <td>
-                            {% set statut = loan.statut|default(loan.status|default('inconnu')) %}
-                            {% if statut in ['overdue','retard','en_retard'] %}
-                                <span class="badge bg-danger">En retard</span>
-                            {% elseif statut in ['borrowed','emprunté','en_cours'] %}
-                                <span class="badge bg-success">En cours</span>
-                            {% elseif statut in ['returned','rendu'] %}
-                                <span class="badge bg-secondary">Rendu</span>
-                            {% else %}
-                                <span class="badge bg-info">{{ statut }}</span>
-                            {% endif %}
-                        </td>
-
-                        <td class="text-end pe-4">
-                            {# Adaptez les routes ci-dessous selon vos routes réelles #}
-                            {% if statut not in ['returned','rendu'] %}
-                                <a href="{{ path('app_emprunt_return', {'id': loan.id}) }}" class="btn btn-sm btn-outline-secondary">
-                                    <i class="bi bi-arrow-return-left"></i> Retourner
-                                </a>
-                                <a href="{{ path('app_emprunt_renew', {'id': loan.id}) }}" class="btn btn-sm btn-primary ms-2">
-                                    <i class="bi bi-arrow-clockwise"></i> Renouveler
-                                </a>
-                            {% else %}
-                                <span class="text-muted small">Aucune action</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                {% endfor %}
-                    </tbody>
-                </table>
+                        <tbody>
+                            {% for loan in loans %}
+                            <tr>
+                                <td class="ps-4 fw-bold">
+                                    {% if loan.exemplaire and loan.exemplaire.ouvrage %}
+                                        {{ loan.exemplaire.ouvrage.titre }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if loan.exemplaire %}
+                                        <span class="badge bg-light text-dark border">{{ loan.exemplaire.cote }}</span>
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                                <td>{{ loan.startAt|date('d/m/Y') }}</td>
+                                <td>
+                                    {{ loan.dueAt|date('d/m/Y') }}
+                                    {% if loan.dueAt < date() and not loan.returnedAt %}
+                                        <span class="badge bg-danger ms-2">Retard</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if loan.status.value == 'en_retard' %}
+                                        <span class="badge bg-danger">En retard</span>
+                                    {% elseif loan.status.value == 'en_cours' %}
+                                        <span class="badge bg-success">En cours</span>
+                                    {% elseif loan.status.value == 'retourne' %}
+                                        <span class="badge bg-secondary">Rendu</span>
+                                    {% else %}
+                                        <span class="badge bg-info">{{ loan.status.value|upper }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end pe-4">
+                                    {% if loan.returnedAt %}
+                                        {{ loan.returnedAt|date('d/m/Y') }}
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-    </div>
     {% endif %}
 </div>
+
+<style>
+    .table thead th {
+        color: #212529 !important;
+        background-color: #e9ecef !important;
+        font-weight: 600;
+    }
+    
+    .table-light {
+        background-color: #e9ecef !important;
+    }
+</style>
 {% endblock %}

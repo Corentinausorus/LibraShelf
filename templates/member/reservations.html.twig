@@ -13,12 +13,12 @@
         </div>
     {% else %}
         <table class="table table-striped">
-            <thead>
+            <thead class="table-light">
                 <tr>
-                    <th>Ouvrage</th>
-                    <th>Date de réservation</th>
-                    <th>Statut</th>
-                    <th>Actions</th>
+                    <th style="color: #212529;">Ouvrage</th>
+                    <th style="color: #212529;">Date de réservation</th>
+                    <th style="color: #212529;">Statut</th>
+                    <th style="color: #212529;">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -57,4 +57,16 @@
         <i class="bi bi-arrow-left"></i> Retour au catalogue
     </a>
 </div>
+
+<style>
+    .table thead th {
+        color: #212529 !important;
+        background-color: #e9ecef !important;
+        font-weight: 600;
+    }
+    
+    .table-light {
+        background-color: #e9ecef !important;
+    }
+</style>
 {% endblock %}
